@@ -34,12 +34,22 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     /**
+     * Escape special wildcards in LIKE query using '!'
+     */
+    private String escapeWildcards(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replace("!", "!!").replace("%", "!%").replace("_", "!_");
+    }
+
+    /**
      * Thực hiện đếm số lượng nhân viên thỏa mãn tiêu chí tìm kiếm bằng cách gọi Repository.
      */
     @Override
     @Transactional(readOnly = true)
     public Long countEmployeesWithFilter(String employeeName, Long departmentId) {
-        return employeeRepository.countEmployeesWithFilter(employeeName, departmentId);
+        return employeeRepository.countEmployeesWithFilter(escapeWildcards(employeeName), departmentId);
     }
 
     /**
@@ -76,7 +86,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Pageable pageable = PageRequest.of(pageNo, limitSafe, sort);
 
         // 3. Thực hiện truy vấn thông qua Repository
-        return employeeRepository.findEmployeesWithFilter(employeeName, departmentId, pageable);
+        return employeeRepository.findEmployeesWithFilter(escapeWildcards(employeeName), departmentId, pageable);
     }
 
     /**

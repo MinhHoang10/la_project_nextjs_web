@@ -43,7 +43,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT COUNT(e) FROM Employee e " +
            "LEFT JOIN e.department d " +
            "WHERE e.employeeRole = 0 " +
-           "AND (:employeeName IS NULL OR :employeeName = '' OR LOWER(e.employeeName) LIKE LOWER(CONCAT('%', :employeeName, '%'))) " +
+           "AND (:employeeName IS NULL OR :employeeName = '' OR LOWER(e.employeeName) LIKE LOWER(CONCAT('%', :employeeName, '%')) ESCAPE '!') " +
            "AND (:departmentId IS NULL OR d.departmentId = :departmentId)")
     Long countEmployeesWithFilter(
             @Param("employeeName") String employeeName,
@@ -68,7 +68,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "LEFT JOIN e.employeesCertifications ec " +
            "LEFT JOIN ec.certification c " +
            "WHERE e.employeeRole = 0 " +
-           "AND (:employeeName IS NULL OR :employeeName = '' OR LOWER(e.employeeName) LIKE LOWER(CONCAT('%', :employeeName, '%'))) " +
+           "AND (:employeeName IS NULL OR :employeeName = '' OR LOWER(e.employeeName) LIKE LOWER(CONCAT('%', :employeeName, '%')) ESCAPE '!') " +
            "AND (:departmentId IS NULL OR d.departmentId = :departmentId)")
     List<EmployeeDTO> findEmployeesWithFilter(
             @Param("employeeName") String employeeName,

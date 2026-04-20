@@ -3,18 +3,18 @@
  * useADM002.ts, 4/13/2026 NguyenHuyHoang
  */
 import { useState, useEffect } from 'react';
-import { departmentService } from '@/lib/api/departmentService';
-import { employeeService } from '@/lib/api/employeeService';
+import { departmentApi } from '@/lib/api/department.api';
+import { employeeApi } from '@/lib/api/employee.api';
 import { EmployeeDTO } from '@/types/employee';
 import { DepartmentDTO } from '@/types/department';
 import { SortConfig } from '@/components/employees/EmployeeTable';
 
 /**
- * Hook tùy chỉnh (Custom Hook) xử lý toàn bộ State và Logic cho trang Danh sách nhân viên (ADM002).
- * Trừu tượng hóa Logic phức tạp ra khỏi UI Component.
+ * Hook xử lý State và Logic cho trang Danh sách nhân viên (ADM002).
+ * Giúp tách biệt logic gọi API và quản lý state ra khỏi giao diện (UI).
  */
 export function useADM002() {
-  // Kho chứa dữ liệu hiển thị (Employees list, Dropdown Departments)
+  // Dữ liệu hiển thị trên giao diện
   const [employees, setEmployees] = useState<EmployeeDTO[]>([]);
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
 
@@ -36,13 +36,24 @@ export function useADM002() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  // Hook tự động kéo dữ liệu (Initial Fetch) khi Component render lấn đầu
+  // Lấy dữ liệu lần đầu khi vào trang
   useEffect(() => {
     const initData = async () => {
       try {
-        const deptData = await departmentService.getAllDepartments();
+        // Lấy lại dữ liệu tìm kiếm từ Session Storage (ví dụ khi từ trang khác quay lại)
+        const storedName = sessionStorage.getItem('adm002_searchName') || '';
+        const storedDeptId = sessionStorage.getItem('adm002_selectedDeptId');
+        const parsedDeptId = storedDeptId ? Number(storedDeptId) : undefined;
+
+        // Cập nhật lại giao diện
+        setSearchName(storedName);
+        if (parsedDeptId) setSelectedDeptId(parsedDeptId);
+
+        const deptData = await departmentApi.getAllDepartments();
         setDepartments(deptData);
-        await fetchEmployees(0); // Gọi API đổ dữ liệu list nhân sự trang 0
+
+        // Gọi API ngay lập tức bằng các tham số cũ vừa lấy ở trên
+        await fetchEmployees(0, storedName, parsedDeptId); 
       } catch (error) {
         console.error('Lỗi trong quá trình khởi tạo dữ liệu ban đầu:', error);
       } finally {
@@ -50,11 +61,12 @@ export function useADM002() {
       }
     };
     initData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageSize, sortConfig]);
 
   /**
-   * Phương thức tải lại list nhân viên lên Grid với các params filter mở rộng.
-   * Bản đồ hóa cấu trúc Sort của Client thành định dạng Sort String của Spring Data.
+   * Hàm gọi API để lấy danh sách nhân viên.
+   * Chuyển đổi định dạng sắp xếp từ Client sang định dạng mà backend hỗ trợ.
    */
   const fetchEmployees = async (page: number, name?: string, deptId?: number, size?: number) => {
     setLoading(true);
@@ -66,9 +78,20 @@ export function useADM002() {
         `employeesCertifications.endDate,${sortConfig.certificationEndDate}`
       ];
 
-      const data = await employeeService.getAllEmployees({
-        name: name !== undefined ? name : searchName,
-        departmentId: deptId !== undefined ? deptId : selectedDeptId,
+      const actualName = name !== undefined ? name : searchName;
+      const actualDeptId = deptId !== undefined ? deptId : selectedDeptId;
+
+      // Lưu điều kiện tìm kiếm vào bộ nhớ tạm để giữ lại khi sang trang khác
+      sessionStorage.setItem('adm002_searchName', actualName);
+      if (actualDeptId !== undefined) {
+        sessionStorage.setItem('adm002_selectedDeptId', String(actualDeptId));
+      } else {
+        sessionStorage.removeItem('adm002_selectedDeptId');
+      }
+
+      const data = await employeeApi.getAllEmployees({
+        name: actualName,
+        departmentId: actualDeptId,
         page: page,
         size: size || pageSize,
         sort: sort
@@ -111,7 +134,7 @@ export function useADM002() {
   };
 
   /**
-   * Phương thức đảo sort (asc/desc) trên một cột sắp xếp xác định khi người dùng click vào Name Cột.
+   * Hàm đổi chiều sắp xếp (từ Tăng dần sang Giảm dần và ngược lại) khi click vào tiêu đề cột.
    */
   const handleSort = (field: keyof SortConfig) => {
     setSortConfig(prev => ({
@@ -121,7 +144,7 @@ export function useADM002() {
   };
 
   return {
-    // Trả ra kho biến đổi (States)
+    // Các biến dùng cho giao diện (States)
     employees,
     departments,
     loading,
@@ -133,7 +156,7 @@ export function useADM002() {
     currentPage,
     totalPages,
     totalElements,
-    // Trả ra kho hành động (Actions)
+    // Các hàm xử lý sự kiện (Actions)
     handleSearch,
     handlePageChange,
     handleSort

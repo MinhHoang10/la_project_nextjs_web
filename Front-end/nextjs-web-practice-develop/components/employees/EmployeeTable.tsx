@@ -56,7 +56,7 @@ export function EmployeeTable({ employees, sortConfig, onSort }: EmployeeTablePr
           employees.map((emp) => (
             <div key={emp.employeeId} className="employee-row-contents" style={{ display: 'contents' }}>
               <div className="bor-l-none text-center">
-                <Link href={`/employees/adm006/${emp.employeeId}`}>{emp.employeeId}</Link>
+                <Link href={`/employees/adm003/${emp.employeeId}`}>{emp.employeeId}</Link>
               </div>
               <div>{emp.employeeName}</div>
               <div>{emp.employeeBirthDate?.replaceAll('-', '/')}</div>

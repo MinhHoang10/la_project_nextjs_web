@@ -8,7 +8,7 @@ import { DepartmentDTO } from '@/types/department';
 /**
  * Khối tiện ích (Service) bọc lại tập hợp các API liên quan đến Phòng Ban.
  */
-export const departmentService = {
+export const departmentApi = {
   /**
    * Gọi GET đến /api/departments lấy toàn bộ danh sách phòng ban.
    * Dùng để đổ dữ liệu vào thẻ <select> trên giao diện trang Chủ.

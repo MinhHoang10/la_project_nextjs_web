@@ -2,72 +2,168 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { useADM004 } from '@/hooks/useADM004';
+import { useState, useRef, Suspense } from 'react';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-export default function EmployeeConfirmPage() {
-  useAuth();
+function EmployeeEditFormContent() {
   const router = useRouter();
+  const { departments, certifications, loadingInitial } = useADM004();
+
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [certificationStartDate, setCertificationStartDate] = useState<Date | null>(null);
+  const [certificationEndDate, setCertificationEndDate] = useState<Date | null>(null);
+  const [selectedCertId, setSelectedCertId] = useState("");
+
+  const birthDateRef = useRef<DatePicker>(null);
+  const certificationStartDateRef = useRef<DatePicker>(null);
+  const certificationEndDateRef = useRef<DatePicker>(null);
+
+  const handleConfirm = () => {
+    router.push('/employees/adm004');
+  };
+
+  const handleBack = () => {
+    router.push('/employees/adm002');
+  };
   return (
     <div className="row">
-      <form className="c-form box-shadow">
-        <ul className="show-data">
-          <li className="title">
-            <p>情報確認</p>
-            <p>入力された情報をＯＫボタンクリックでＤＢへ保存してください</p>
+      <form className="c-form box-shadow was-validated">
+        <ul>
+          <li className="title">会員情報編集</li>
+          <li className="box-err">
+            {/* <div className="box-err-content">Hiển thị lỗi chung lại đây</div> */}
           </li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">アカウント名</label>
-            <div className="col-sm col-sm-10">ntmhuong</div>
+            <label className="col-form-label col-sm-2"><i className="relative">アカウント名:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10"><input type="text" className="form-control" maxLength={50} /></div>
           </li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">グループ</label>
-            <div className="col-sm col-sm-10">Nhóm 1</div>
+            <label className="col-form-label col-sm-2"><i className="relative">グループ:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10">
+              <select className="form-control">
+                <option value="">選択してください</option>
+                {departments.map((dept) => (
+                  <option key={dept.departmentId} value={dept.departmentId}>
+                    {dept.departmentName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">氏名</label>
-            <div className="col-sm col-sm-10">Nguyễn Thị Mai Hương</div>
+            <label className="col-form-label col-sm-2"><i className="relative">氏名:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10"><input type="text" className="form-control" maxLength={125} /></div>
           </li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">カタカナ氏名</label>
-            <div className="col-sm col-sm-10">名カナ</div>
+            <label className="col-form-label col-sm-2"><i className="relative">カタカナ氏名:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10">
+              <input type="text" className="form-control" maxLength={125} required />
+              {/* <div className="invalid-feedback">Example invalid form file feedback</div> */}
+            </div>
           </li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">生年月日</label>
-            <div className="col-sm col-sm-10">1983/07/08</div>
+            <label className="col-form-label col-sm-2"><i className="relative">生年月日:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10 d-flex">
+              <div className="datepicker-wrapper">
+                <DatePicker
+                  ref={birthDateRef}
+                  placeholderText='yyyy/MM/dd'
+                  selected={birthDate}
+                  onChange={(date: Date | null) => setBirthDate(date ?? null)}
+                  dateFormat="yyyy/MM/dd"
+                />
+                <span className="glyphicon glyphicon-calendar" onClick={() => birthDateRef.current?.setFocus()}></span>
+              </div>
+            </div>
           </li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">メールアドレス</label>
-            <div className="col-sm col-sm-10">メールアドレス</div>
+            <label className="col-form-label col-sm-2"><i className="relative">メールアドレス:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10"><input type="text" className="form-control" maxLength={125} /></div>
           </li>
-          <li className="form-group row d-flex  bor-none">
-            <label className="col-form-label col-sm-2">電話番号</label>
-            <div className="col-sm col-sm-10">0914326386</div>
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2"><i className="relative">電話番号:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10"><input type="text" className="form-control" maxLength={50} /></div>
+          </li>
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2"><i className="relative">パスワード:<span className="note-red">*</span></i></label>
+            <div className="col-sm col-sm-10"><input type="text" className="form-control" maxLength={50} /></div>
+          </li>
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2"><i className="relative">パスワード（確認）:</i></label>
+            <div className="col-sm col-sm-10"><input type="text" className="form-control" maxLength={50} /></div>
           </li>
           <li className="title mt-12"><a href="#!">日本語能力</a></li>
           <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">資格</label>
-            <div className="col-sm col-sm-10">Trình độ tiếng nhật cấp 1</div>
+            <label className="col-form-label col-sm-2"><i className="relative">資格:</i></label>
+            <div className="col-sm col-sm-10">
+              <select className="form-control" value={selectedCertId} onChange={(e) => setSelectedCertId(e.target.value)}>
+                <option value="">選択してください</option>
+                {certifications.map((cert) => (
+                  <option key={cert.certificationId} value={cert.certificationId}>
+                    {cert.certificationName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </li>
-          <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">資格交付日</label>
-            <div className="col-sm col-sm-10">2010/07/08</div>
-          </li>
-          <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">失効日</label>
-            <div className="col-sm col-sm-10">2010/07/08</div>
-          </li>
-          <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">点数</label>
-            <div className="col-sm col-sm-10">290</div>
-          </li>
+          {selectedCertId && (
+            <>
+              <li className="form-group row d-flex">
+                <label className="col-form-label col-sm-2"><i className="relative">資格交付日:<span className="note-red">*</span></i></label>
+                <div className="col-sm col-sm-10 d-flex">
+                  <div className="datepicker-wrapper">
+                    <DatePicker
+                      ref={certificationStartDateRef}
+                      placeholderText='yyyy/MM/dd'
+                      selected={certificationStartDate}
+                      onChange={(date: Date | null) => setCertificationStartDate(date ?? null)}
+                      dateFormat="yyyy/MM/dd"
+                    />
+                    <span className="glyphicon glyphicon-calendar" onClick={() => certificationStartDateRef.current?.setFocus()}></span>
+                  </div>
+                </div>
+              </li>
+              <li className="form-group row d-flex">
+                <label className="col-form-label col-sm-2"><i className="relative">失効日:<span className="note-red">*</span></i></label>
+                <div className="col-sm col-sm-10 d-flex">
+                  <div className="datepicker-wrapper">
+                    <DatePicker
+                      ref={certificationEndDateRef}
+                      placeholderText='yyyy/MM/dd'
+                      selected={certificationEndDate}
+                      onChange={(date: Date | null) => setCertificationEndDate(date ?? null)}
+                      dateFormat="yyyy/MM/dd"
+                    />
+                    <span className="glyphicon glyphicon-calendar" onClick={() => certificationEndDateRef.current?.setFocus()}></span>
+                  </div>
+                </div>
+              </li>
+              <li className="form-group row d-flex">
+                <label className="col-form-label col-sm-2"><i className="relative">点数:</i></label>
+                <div className="col-sm col-sm-10"><input type="text" className="form-control" /></div>
+              </li>
+            </>
+          )}
           <li className="form-group row d-flex">
             <div className="btn-group col-sm col-sm-10 ml">
-              <button type="button" onClick={() => router.push('/employees/adm005')} className="btn btn-primary btn-sm">OK</button>
-              <button type="button" onClick={() => router.push('/employees/adm003')} className="btn btn-secondary btn-sm">戻る</button>
+              <button type="button" onClick={handleConfirm} className="btn btn-primary btn-sm">確認</button>
+              <button type="button" onClick={handleBack} className="btn btn-secondary btn-sm">戻る</button>
             </div>
           </li>
         </ul>
       </form>
     </div>
+  );
+}
+
+export default function EmployeeEditPage() {
+  useAuth();
+  return (
+    <Suspense fallback={<div className="p-4 text-center">Đang tải cấu hình...</div>}>
+      <EmployeeEditFormContent />
+    </Suspense>
   );
 }
 

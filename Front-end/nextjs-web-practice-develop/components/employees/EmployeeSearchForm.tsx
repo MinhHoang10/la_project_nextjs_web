@@ -69,7 +69,7 @@ export function EmployeeSearchForm({
               <button type="submit" className="btn btn-primary btn-sm">検索</button>
               <button
                 type="button"
-                onClick={() => router.push('/employees/adm003')}
+                onClick={() => router.push('/employees/adm004?mode=add')}
                 className="btn btn-secondary btn-sm"
               >
                 新規追加

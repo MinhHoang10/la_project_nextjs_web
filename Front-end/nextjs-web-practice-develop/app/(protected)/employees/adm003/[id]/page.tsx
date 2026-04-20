@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { employeeService } from '@/lib/api/employeeService';
+import { employeeApi } from '@/lib/api/employee.api';
 import { EmployeeDTO } from '@/types/employee';
 
 export default function EmployeeDetailPage() {
@@ -17,7 +17,7 @@ export default function EmployeeDetailPage() {
 
   useEffect(() => {
     if (id) {
-      employeeService.getEmployeeById(id).then(data => {
+      employeeApi.getEmployeeById(id).then(data => {
         setEmployee(data);
         setLoading(false);
       }).catch(err => {
@@ -85,7 +85,7 @@ export default function EmployeeDetailPage() {
           )}
           <li className="form-group row d-flex">
             <div className="btn-group col-sm col-sm-10 ml">
-              <button type="button" onClick={() => router.push('/employees/adm003')} className="btn btn-primary btn-sm">編集</button>
+              <button type="button" onClick={() => router.push(`/employees/adm004?mode=edit&id=${id}`)} className="btn btn-primary btn-sm">編集</button>
               <button type="button" className="btn btn-secondary btn-sm">削除</button>
               <button type="button" onClick={() => router.push('/employees/adm002')} className="btn btn-secondary btn-sm">戻る</button>
             </div>

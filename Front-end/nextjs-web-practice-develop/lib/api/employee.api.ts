@@ -8,7 +8,7 @@ import { EmployeeDTO, EmployeeListResponse, EmployeeSearchParams } from '@/types
 /**
  * Khối tiện ích cốt lõi tương tác với các End-point của Nhân viên.
  */
-export const employeeService = {
+export const employeeApi = {
   /**
    * API gọi lưới danh sách nhân viên.
    * 
@@ -21,11 +21,11 @@ export const employeeService = {
     let sortEndDate = 'asc';
 
     if (Array.isArray(params.sort)) {
-       params.sort.forEach(s => {
-          if (s.includes('employeeName,')) sortEmployeeName = s.split(',')[1];
-          if (s.includes('certificationName,')) sortCertificationName = s.split(',')[1];
-          if (s.includes('endDate,')) sortEndDate = s.split(',')[1];
-       });
+      params.sort.forEach(s => {
+        if (s.includes('employeeName,')) sortEmployeeName = s.split(',')[1];
+        if (s.includes('certificationName,')) sortCertificationName = s.split(',')[1];
+        if (s.includes('endDate,')) sortEndDate = s.split(',')[1];
+      });
     }
 
     const limit = params.size || 20;
@@ -46,11 +46,11 @@ export const employeeService = {
     return response.data;
   },
 
-  /**
-   * Truy vấn thông tin độc lập của một nhân viên bằng ID trên URI Path.
-   */
-  getEmployeeById: async (id: number) => {
-    const response = await apiClient.get<EmployeeDTO>(`/api/employees/${id}`);
-    return response.data;
-  },
+  // /**
+  //  * Truy vấn thông tin độc lập của một nhân viên bằng ID trên URI Path.
+  //  */
+  // getEmployeeById: async (id: number) => {
+  //   const response = await apiClient.get<EmployeeDTO>(`/api/employees/${id}`);
+  //   return response.data;
+  // },
 };
