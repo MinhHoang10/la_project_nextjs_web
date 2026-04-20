@@ -1,0 +1,61 @@
+-- -- Xóa dữ liệu cũ để làm sạch database
+-- DELETE FROM employees_certifications;
+-- DELETE FROM employees;
+
+-- -- Reset Auto Increment (Tùy chọn, giúp ID bắt đầu từ 1 cho đẹp)
+-- ALTER TABLE employees AUTO_INCREMENT = 1;
+-- ALTER TABLE employees_certifications AUTO_INCREMENT = 1;
+
+-- -- Nạp 40 nhân vật lịch sử Việt Nam
+-- INSERT INTO employees (department_id, employee_name, employee_name_kana, employee_birth_date, employee_email, employee_telephone, employee_login_id, employee_login_password) VALUES
+-- (1, 'Hùng Vương', 'フン ヴオン', '1980-01-01', 'hungvuong@luvina.net', '0123456001', 'hungvuong', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'An Dương Vương', 'アン ズオン ヴオン', '1981-02-02', 'anduongvuong@luvina.net', '0123456002', 'anduongvuong', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Hai Bà Trưng', 'ハイ バー チュン', '1982-03-03', 'haibatrung@luvina.net', '0123456003', 'haibatrung', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Bà Triệu', 'バー チュウ', '1983-04-04', 'batrieu@luvina.net', '0123456004', 'batrieu', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Lý Nam Đế', 'リー ナム デ', '1984-05-05', 'lynamde@luvina.net', '0123456005', 'lynamde', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Triệu Quang Phục', 'チュウ クアン フック', '1985-06-06', 'trieuquangphuc@luvina.net', '0123456006', 'trieuquangphuc', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Mai Thúc Loan', 'マイ トゥック ロアン', '1986-07-07', 'maithucloan@luvina.net', '0123456007', 'maithucloan', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Phùng Hưng', 'フン フン', '1987-08-08', 'phunghung@luvina.net', '0123456008', 'phunghung', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Khúc Thừa Dụ', 'クック トゥア ズ', '1988-09-09', 'khucthuadu@luvina.net', '0123456009', 'khucthuadu', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Dương Đình Nghệ', 'ズオン ディン ゲ', '1989-10-10', 'duongdinhnghe@luvina.net', '0123456010', 'duongdinhnghe', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'Ngô Quyền', 'ゴ クエン', '1990-11-11', 'ngoquyen@luvina.net', '0123456011', 'ngoquyen', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'Đinh Bộ Lĩnh', 'ディン ボー リン', '1991-12-12', 'dinhbolinh@luvina.net', '0123456012', 'dinhbolinh', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Lê Đại Hành', 'レ ダイ ハン', '1992-01-13', 'ledaihanh@luvina.net', '0123456013', 'ledaihanh', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Lý Thái Tổ', 'リー タイ トー', '1993-02-14', 'lythaito@luvina.net', '0123456014', 'lythaito', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Lý Thường Kiệt', 'リー トゥオン キエト', '1994-03-15', 'lythuongkiet@luvina.net', '0123456015', 'lythuongkiet', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Trần Hưng Đạo', 'チャン フン ダオ', '1995-04-16', 'tranhungdao@luvina.net', '0123456016', 'tranhungdao', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Trần Nhân Tông', 'チャン ニャン トン', '1996-05-17', 'trannhantong@luvina.net', '0123456017', 'trannhantong', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Chu Văn An', 'チュー ヴァン アン', '1997-06-18', 'chuvanan@luvina.net', '0123456018', 'chuvanan', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Lê Lợi', 'レ ロイ', '1998-07-19', 'leloi@luvina.net', '0123456019', 'leloi', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Nguyễn Trãi', 'グエン チュアイ', '1999-08-20', 'nguyentrai@luvina.net', '0123456020', 'nguyentrai', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'Lương Thế Vinh', 'ルオン テー ヴィン', '1980-09-21', 'luongthevinh@luvina.net', '0123456021', 'luongthevinh', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'Trần Nguyên Hãn', 'チャン グエン ハン', '1981-10-22', 'trannguyenhan@luvina.net', '0123456022', 'trannguyenhan', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Nguyễn Huệ', 'グエン フエ', '1982-11-23', 'nguyenhue@luvina.net', '0123456023', 'nguyenhue', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Nguyễn Du', 'グエン ズ', '1983-12-24', 'nguyendu@luvina.net', '0123456024', 'nguyendu', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Phan Bội Châu', 'ファン ボイ チャウ', '1984-01-25', 'phanboichau@luvina.net', '0123456025', 'phanboichau', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Phan Châu Trinh', 'ファン チャウ チン', '1985-02-26', 'phanchautrinh@luvina.net', '0123456026', 'phanchautrinh', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Trần Phú', 'チャン フー', '1986-03-27', 'tranphu@luvina.net', '0123456027', 'tranphu', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Nguyễn Văn Cừ', 'グエン ヴァン クー', '1987-04-28', 'nguyenvancu@luvina.net', '0123456028', 'nguyenvancu', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Võ Nguyên Giáp', 'ヴォ グエン ザップ', '1988-05-29', 'vonguyengiap@luvina.net', '0123456029', 'vonguyengiap', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Lê Trọng Tấn', 'レ チョン タン', '1989-06-30', 'letrongtan@luvina.net', '0123456030', 'letrongtan', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'Nguyễn Chí Thanh', 'グエン チー タン', '1990-07-01', 'nguyenchithanh@luvina.net', '0123456031', 'nguyenchithanh', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Phạm Văn Đồng', 'ファム ヴァン ドン', '1991-08-02', 'phamvandong@luvina.net', '0123456032', 'phamvandong', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Tôn Đức Thắng', 'トン ドゥック タン', '1992-09-03', 'tonducthang@luvina.net', '0123456033', 'tonducthang', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Ngô Gia Tự', 'ゴ ザ トゥ', '1993-10-04', 'ngogiatu@luvina.net', '0123456034', 'ngogiatu', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Nguyễn Thái Học', 'グエン タイ ホック', '1994-11-05', 'nguyenthaihoc@luvina.net', '0123456035', 'nguyenthaihoc', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (1, 'Lê Hồng Phong', 'レ ホン フォン', '1995-12-06', 'lehongphong@luvina.net', '0123456036', 'lehongphong', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (2, 'Nguyễn Thị Minh Khai', 'グエン ティ ミン カイ', '1996-01-07', 'ntminhkai@luvina.net', '0123456037', 'ntminhkai', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (3, 'Võ Thị Sáu', 'ヴォ ティ サウ', '1997-02-08', 'vothisau@luvina.net', '0123456038', 'vothisau', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (4, 'Lê Văn Tám', 'レ ヴァン タム', '1998-03-09', 'levantam@luvina.net', '0123456039', 'levantam', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW'),
+-- (5, 'Kim Đồng', 'キム ドン', '1999-04-10', 'kimdong@luvina.net', '0123456040', 'kimdong', '$2a$10$w5Zu25V9Nt5zGW/P2W.8Eev/EMGmrCeqoHUN3the0lBjMCMSodCxW');
+
+-- -- Nạp chứng chỉ cho tất cả 40 người (Mỗi người 1 chứng chỉ ngẫu nhiên N1->N5)
+-- -- Sử dụng Cross Join để tạo dải chứng chỉ ngẫu nhiên cho đẹp
+-- INSERT INTO employees_certifications (employee_id, certification_id, start_date, end_date, score)
+-- SELECT 
+--     employee_id, 
+--     (employee_id % 5) + 1 as certification_id,
+--     '2022-01-01',
+--     DATE_ADD('2022-01-01', INTERVAL (2 + (employee_id % 3)) YEAR),
+--     (180 + (employee_id * 7) % 320) as score
+-- FROM employees;
