@@ -7,8 +7,8 @@ import { EmployeeCertificationDTO } from './employees-certifications';
 
 /**
  * Lớp Types ánh xạ trực tiếp với EmployeeDTO trên Java Backend.
- * Dùng làm mỏ neo cố định các trường hiển thị List và Detail.
- * Kết hợp thông tin từ Phòng ban và Chứng chỉ (Flattened structure).
+ * Dùng để cố định các trường hiển thị List và Detail.
+ * Kết hợp thông tin từ Phòng ban và Chứng chỉ.
  */
 export interface EmployeeDTO extends EmployeeCertificationDTO {
   employeeId?: number;
@@ -61,4 +61,11 @@ export interface EmployeeSearchParams {
   page?: number;     // Vị trí trang
   size?: number;     // Số Limit mỗi trang
   sort?: string | string[]; // Dãy thuộc tính muốn SORT
+}
+
+/**
+ * Interface dành riêng cho Form nhập liệu (ADM004) và xác nhận (ADM005).
+ */
+export interface EmployeeFormDTO extends EmployeeDTO {
+  employeeLoginPasswordConfirm?: string;
 }

@@ -13,10 +13,11 @@ import java.util.List;
  * @author Nguyen Huy Hoang
  */
 public interface DepartmentService {
-    
+
     /**
-     * Lấy danh sách toàn bộ phòng ban, sẵn sàng nhúng vào dropdown menu.
-     * @return Một danh sách các DepartmentDTO
+     * Lấy danh sách toàn bộ phòng ban.
+     * 
+     * @return Danh sách các DepartmentDTO
      */
     List<DepartmentDTO> getAllDepartments();
 }

@@ -10,7 +10,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 /**
- * Controller kiểm tra trạng thái sức khỏe khởi điểm của dịch vụ back-end.
+ * Controller kiểm tra trạng thái khởi động của dịch vụ back-end.
  * 
  * @author Nguyen Huy Hoang
  */
@@ -23,7 +23,6 @@ public class HomeController {
         this.messageSource = messageSource;
     }
 
-    /** Đích khởi động ngẫu nhiên xác nhận dịch vụ đã lên */
     @RequestMapping("/")
     public String index() {
         return messageSource.getMessage("msg.home.welcome", null, LocaleContextHolder.getLocale());

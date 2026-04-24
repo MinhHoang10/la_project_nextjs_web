@@ -18,8 +18,9 @@ import javax.persistence.Table;
 import lombok.Data;
 
 /**
- * Lớp Thực thể (Entity) đại diện cho bảng 'employees_certifications' trong cơ sở dữ liệu.
- * Đây là bảng trung gian xử lý quan hệ nhiều-nhiều (N-N) thông qua 2 kết nối N-1 giữa nhân viên và chứng chỉ.
+ * Lớp Entity đại diện cho bảng 'employees_certifications'.
+ * Đây là bảng trung gian xử lý quan hệ nhiều-nhiều thông qua 2 kết nối N-1 giữa
+ * nhân viên và chứng chỉ.
  * 
  * @author Nguyen Huy Hoang
  */

@@ -19,7 +19,7 @@ public class LoginRequest {
     /** Tên đăng nhập của tài khoản người dùng */
     @NotBlank(message = "ER001")
     private String username;
-    
+
     /** Mật khẩu truy cập dạng chuỗi của tài khoản */
     @NotBlank(message = "ER001")
     private String password;

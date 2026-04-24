@@ -1,18 +1,22 @@
 /*
  * Copyright(C) 2010 Luvina Software Company
- *
  * EmployeeController.java, 4/13/2026, NguyenHuyHoang
  */
-
 package com.luvina.la.controller;
 
+import com.luvina.la.constant.AppConstants;
 import com.luvina.la.dto.EmployeeDTO;
-import com.luvina.la.dto.EmployeeListResponse;
+import com.luvina.la.payload.EmployeeListResponse;
+import com.luvina.la.payload.EmployeeRequest;
+import com.luvina.la.payload.EmployeeResponse;
+import com.luvina.la.payload.MessageResponse;
+import com.luvina.la.repository.CertificationRepository;
+import com.luvina.la.repository.DepartmentRepository;
+import com.luvina.la.repository.EmployeeRepository;
 import com.luvina.la.service.EmployeeService;
+import com.luvina.la.validate.EmployeeValidate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
-import com.luvina.la.constant.AppConstants;
-import com.luvina.la.validate.EmployeeValidation;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +27,6 @@ import java.util.List;
 
 /**
  * Controller xử lý các yêu cầu HTTP liên quan đến nghiệp vụ Nhân viên.
- * Đóng vai trò là điểm tiếp nhận cho các yêu cầu từ phía Frontend.
  * 
  * @author Nguyen Huy Hoang
  */
@@ -34,31 +37,25 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
     private final MessageSource messageSource;
+    private final DepartmentRepository departmentRepository;
+    private final CertificationRepository certificationRepository;
+    private final EmployeeRepository employeeRepository;
 
-    /**
-     * Khởi tạo Controller với các phụ thuộc.
-     *
-     * @param employeeService Dịch vụ xử lý nghiệp vụ nhân viên
-     * @param messageSource   Nguồn tài nguyên thông báo
-     */
-    public EmployeeController(EmployeeService employeeService, MessageSource messageSource) {
+    public EmployeeController(
+            EmployeeService employeeService,
+            MessageSource messageSource,
+            DepartmentRepository departmentRepository,
+            CertificationRepository certificationRepository,
+            EmployeeRepository employeeRepository) {
         this.employeeService = employeeService;
         this.messageSource = messageSource;
+        this.departmentRepository = departmentRepository;
+        this.certificationRepository = certificationRepository;
+        this.employeeRepository = employeeRepository;
     }
 
     /**
-     * API lấy danh sách nhân viên kết hợp bộ lọc tìm kiếm và phân trang (ADM002).
-     * Chỉ trả về danh sách những nhân viên có vai trò là người dùng thường
-     * (userRole = 0).
-     * 
-     * @param employeeName          Tên nhân viên
-     * @param departmentId          Mã phòng ban
-     * @param sortEmployeeName      Thứ tự sắp xếp theo tên
-     * @param sortCertificationName Thứ tự sắp xếp theo chứng chỉ
-     * @param sortEndDate           Thứ tự sắp xếp theo ngày hết hạn
-     * @param limit                 Số lượng bản ghi trên một trang
-     * @param offset                Vị trí bắt đầu lấy bản ghi
-     * @return Đối tượng bao bọc kết quả danh sách và thông tin phân trang
+     * API lấy danh sách nhân viên (ADM002).
      */
     @GetMapping("/employees")
     public ResponseEntity<EmployeeListResponse> getEmployeeList(
@@ -70,78 +67,149 @@ public class EmployeeController {
             @RequestParam(value = "limit", required = false, defaultValue = AppConstants.DEFAULT_LIMIT_STR) Integer limit,
             @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset) {
 
-        try {
-            // Bước 1: Kiểm tra tính hợp lệ của các tham số sắp xếp (Sort)
-            if (!EmployeeValidation.isValidSort(sortEmployeeName) ||
-                    !EmployeeValidation.isValidSort(sortCertificationName) ||
-                    !EmployeeValidation.isValidSort(sortEndDate)) {
-                return ResponseEntity.ok(EmployeeListResponse.error(AppConstants.ER021,
-                        messageSource.getMessage(AppConstants.ER021, null, LocaleContextHolder.getLocale())));
-            }
+        // Validation sort
+        if (!EmployeeValidate.isValidSort(sortEmployeeName) ||
+                !EmployeeValidate.isValidSort(sortCertificationName) ||
+                !EmployeeValidate.isValidSort(sortEndDate)) {
+            return ResponseEntity.ok(EmployeeListResponse.error(AppConstants.ER021,
+                    messageSource.getMessage(AppConstants.ER021, null, LocaleContextHolder.getLocale())));
+        }
 
-            // Bước 2: Truy vấn tổng số lượng nhân viên thỏa mãn điều kiện lọc
-            Long totalRecords = employeeService.countEmployeesWithFilter(
+        // Đếm số lượng bản ghi
+        Long totalRecords = employeeService.countEmployeesWithFilter(
+                employeeName.isEmpty() ? null : employeeName,
+                departmentId);
+
+        // Lấy danh sách nhân viên
+        List<EmployeeDTO> employees = new ArrayList<>();
+        if (totalRecords > 0) {
+            if (offset >= totalRecords) {
+                return ResponseEntity.ok(EmployeeListResponse.error(AppConstants.ER022,
+                        messageSource.getMessage(AppConstants.ER022, null, LocaleContextHolder.getLocale())));
+            }
+            employees = employeeService.getListEmployee(
                     employeeName.isEmpty() ? null : employeeName,
-                    departmentId);
+                    departmentId,
+                    sortEmployeeName.toLowerCase(),
+                    sortCertificationName.toLowerCase(),
+                    sortEndDate.toLowerCase(),
+                    limit,
+                    offset);
+        }
 
-            List<EmployeeDTO> employees = new ArrayList<>();
+        // Tạo response
+        EmployeeListResponse response = new EmployeeListResponse();
+        response.setCode(AppConstants.SUCCESS_CODE);
+        response.setTotalRecords(totalRecords);
+        response.setEmployees(employees);
+        return ResponseEntity.ok(response);
+    }
 
-            // Chỉ thực hiện lấy danh sách nếu có bản ghi tồn tại
-            if (totalRecords > 0) {
-                // Kiểm tra xem vị trí bắt đầu (Offset) có vượt quá tổng số bản ghi không
-                if (offset >= totalRecords) {
-                    return ResponseEntity.ok(EmployeeListResponse.error(AppConstants.ER022,
-                            messageSource.getMessage(AppConstants.ER022, null, LocaleContextHolder.getLocale())));
-                }
+    /**
+     * API lấy chi tiết nhân viên.
+     */
+    @GetMapping("/employee/{id}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable Long id) {
+        EmployeeDTO employee = employeeService.getEmployeeById(id);
 
-                // Bước 3: Lấy danh sách nhân viên chi tiết từ Cơ sở dữ liệu
-                employees = employeeService.getListEmployee(
-                        employeeName.isEmpty() ? null : employeeName,
-                        departmentId,
-                        sortEmployeeName.toLowerCase(),
-                        sortCertificationName.toLowerCase(),
-                        sortEndDate.toLowerCase(),
-                        limit,
-                        offset);
+        // Response lỗi nếu không tìm thấy
+        if (employee == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(employee);
+    }
+
+    /**
+     * API thêm mới nhân viên (ADM005 OK).
+     */
+    @PostMapping("/employee") // Chuyển về số ít theo Spec
+    public ResponseEntity<?> createEmployee(@RequestBody EmployeeRequest request) {
+        try {
+            // Validation Request
+            List<MessageResponse> errors = EmployeeValidate.validateEmployeeForm(
+                    request, true, departmentRepository, certificationRepository, employeeRepository);
+
+            // Response lỗi nếu validation thất bại
+            if (!errors.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(EmployeeResponse.validationError(AppConstants.BAD_REQUEST_CODE, errors));
             }
 
-            // Bước 4: Đóng gói dữ liệu và trả về kết quả thành công
-            EmployeeListResponse response = new EmployeeListResponse();
-            response.setCode(AppConstants.SUCCESS_CODE);
-            response.setTotalRecords(totalRecords);
-            response.setEmployees(employees);
-            response.setParams(new ArrayList<>()); // Đảm bảo params luôn là mảng rỗng [] theo đặc tả
+            // Tạo nhân viên
+            Long employeeId = employeeService.addEmployee(request);
 
-            return ResponseEntity.ok(response);
-
+            // Response thành công
+            MessageResponse msg = new MessageResponse(AppConstants.MSG001, new ArrayList<>());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(EmployeeResponse.success(AppConstants.SUCCESS_CODE, employeeId, msg));
         } catch (Exception e) {
-            // Ghi log lỗi chi tiết phục vụ việc truy vết hệ thống
-            log.error("Lỗi hệ thống khi xử lý lấy danh sách nhân viên: ", e);
-
-            // Trả về thông báo lỗi hệ thống tổng quát cho người dùng kèm mã HTTP 500
-            EmployeeListResponse errorResponse = EmployeeListResponse.error(AppConstants.SYSTEM_ERROR_CODE,
-                    messageSource.getMessage(AppConstants.ER023, null, LocaleContextHolder.getLocale()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            log.error("Error creating employee", e);
+            // Response lỗi hệ thống (ER015)
+            MessageResponse msg = new MessageResponse(AppConstants.ER015, new ArrayList<>());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
         }
     }
 
     /**
-     * API truy vấn thông tin chi tiết một nhân viên theo ID.
-     * 
-     * @param id Khóa chính của nhân viên
-     * @return Dữ liệu chi tiết nhân viên (DTO)
+     * API kiểm tra tính hợp lệ (ADM004 Xác nhận).
      */
-    @GetMapping("/employees/{id}")
-    public ResponseEntity<?> getEmployeeById(@PathVariable Long id) {
-        try {
-            EmployeeDTO employee = employeeService.getEmployeeById(id);
-            if (employee == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-            return ResponseEntity.ok(employee);
-        } catch (Exception e) {
-            log.error("Lỗi khi truy xuất chi tiết nhân viên có id " + id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    @PostMapping("/employee/validate")
+    public ResponseEntity<?> validateEmployee(@RequestBody EmployeeRequest request) {
+        boolean isAddMode = request.getEmployeeId() == null;
+        // Validation Request
+        List<MessageResponse> errors = EmployeeValidate.validateEmployeeForm(
+                request, isAddMode, departmentRepository, certificationRepository, employeeRepository);
+
+        // Response lỗi nếu validation thất bại
+        if (!errors.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(EmployeeResponse.validationError(AppConstants.BAD_REQUEST_CODE, errors));
         }
+
+        return ResponseEntity.ok(EmployeeResponse.success(AppConstants.SUCCESS_CODE, null, null));
     }
+
+    /*
+     * @PutMapping("/employee/{id}")
+     * public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody
+     * EmployeeRequest request) {
+     * try {
+     * // Kiểm tra nhân viên có tồn tại không
+     * if (employeeService.getEmployeeById(id) == null) {
+     * MessageResponse msg = new MessageResponse(AppConstants.ER004,
+     * List.of("Nhân viên"));
+     * return ResponseEntity.status(HttpStatus.NOT_FOUND)
+     * .body(EmployeeResponse.error(AppConstants.BAD_REQUEST_CODE, msg));
+     * }
+     * 
+     * // Validation Request
+     * List<MessageResponse> errors = EmployeeValidate.validateEmployeeForm(
+     * request, false, departmentRepository, certificationRepository,
+     * employeeRepository);
+     * 
+     * // Response lỗi nếu validation thất bại
+     * if (!errors.isEmpty()) {
+     * return ResponseEntity.badRequest()
+     * .body(EmployeeResponse.validationError(AppConstants.BAD_REQUEST_CODE,
+     * errors));
+     * }
+     * 
+     * // Cập nhật nhân viên
+     * employeeService.updateEmployee(id, request);
+     * 
+     * // Response thành công
+     * MessageResponse msg = new MessageResponse(AppConstants.MSG001, new
+     * ArrayList<>());
+     * return ResponseEntity.ok(EmployeeResponse.success(AppConstants.SUCCESS_CODE,
+     * id, msg));
+     * } catch (Exception e) {
+     * log.error("Error updating employee", e);
+     * MessageResponse msg = new MessageResponse(AppConstants.ER015, new
+     * ArrayList<>());
+     * return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+     * .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
+     * }
+     * }
+     */
 }

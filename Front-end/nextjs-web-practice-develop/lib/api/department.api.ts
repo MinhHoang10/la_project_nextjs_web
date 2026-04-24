@@ -14,7 +14,7 @@ export const departmentApi = {
    * Dùng để đổ dữ liệu vào thẻ <select> trên giao diện trang Chủ.
    */
   getAllDepartments: async () => {
-    const response = await apiClient.get<DepartmentDTO[]>('/department');
+    const response = await apiClient.get<DepartmentDTO[]>('/api/departments');
     return response.data;
   },
 };

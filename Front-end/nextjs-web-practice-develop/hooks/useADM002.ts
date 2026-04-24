@@ -8,12 +8,15 @@ import { employeeApi } from '@/lib/api/employee.api';
 import { EmployeeDTO } from '@/types/employee';
 import { DepartmentDTO } from '@/types/department';
 import { SortConfig } from '@/components/employees/EmployeeTable';
+import { useRouter } from 'next/navigation';
+import { storage } from '@/lib/utils/storage';
 
 /**
  * Hook xử lý State và Logic cho trang Danh sách nhân viên (ADM002).
  * Giúp tách biệt logic gọi API và quản lý state ra khỏi giao diện (UI).
  */
 export function useADM002() {
+  const router = useRouter();
   // Dữ liệu hiển thị trên giao diện
   const [employees, setEmployees] = useState<EmployeeDTO[]>([]);
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
@@ -41,8 +44,8 @@ export function useADM002() {
     const initData = async () => {
       try {
         // Lấy lại dữ liệu tìm kiếm từ Session Storage (ví dụ khi từ trang khác quay lại)
-        const storedName = sessionStorage.getItem('adm002_searchName') || '';
-        const storedDeptId = sessionStorage.getItem('adm002_selectedDeptId');
+        const storedName = storage.session.get<string>('adm002_searchName') || '';
+        const storedDeptId = storage.session.get<string>('adm002_selectedDeptId');
         const parsedDeptId = storedDeptId ? Number(storedDeptId) : undefined;
 
         // Cập nhật lại giao diện
@@ -56,6 +59,7 @@ export function useADM002() {
         await fetchEmployees(0, storedName, parsedDeptId); 
       } catch (error) {
         console.error('Lỗi trong quá trình khởi tạo dữ liệu ban đầu:', error);
+        router.push('/employees/system_error');
       } finally {
         setLoading(false);
       }
@@ -82,11 +86,11 @@ export function useADM002() {
       const actualDeptId = deptId !== undefined ? deptId : selectedDeptId;
 
       // Lưu điều kiện tìm kiếm vào bộ nhớ tạm để giữ lại khi sang trang khác
-      sessionStorage.setItem('adm002_searchName', actualName);
+      storage.session.set('adm002_searchName', actualName);
       if (actualDeptId !== undefined) {
-        sessionStorage.setItem('adm002_selectedDeptId', String(actualDeptId));
+        storage.session.set('adm002_selectedDeptId', String(actualDeptId));
       } else {
-        sessionStorage.removeItem('adm002_selectedDeptId');
+        storage.session.remove('adm002_selectedDeptId');
       }
 
       const data = await employeeApi.getAllEmployees({
@@ -111,6 +115,7 @@ export function useADM002() {
       }
     } catch (error) {
       console.error('Có lỗi xảy ra khi fetch list nhân viên:', error);
+      router.push('/employees/system_error');
     } finally {
       setLoading(false);
     }

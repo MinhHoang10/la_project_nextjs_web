@@ -23,10 +23,10 @@ public class DefaultProfileUtil {
     }
 
     /**
-     * Thiết lập profile cấu hình mặc định (dev) khi chưa có profile nào được chỉ định từ biến môi trường.
-     * Cấu hình này không thể thiết lập qua file application.yml do Spring Boot xử lý.
+     * Thiết lập profile cấu hình mặc định khi chưa có profile nào được chỉ định
+     * từ biến môi trường
      *
-     * @param app Khởi tạo của SpringApplication
+     * @param app SpringApplication
      */
     public static void addDefaultProfile(SpringApplication app) {
         Map<String, Object> defProperties = new HashMap<>();

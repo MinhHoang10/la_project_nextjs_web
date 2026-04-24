@@ -5,7 +5,7 @@
 
 /**
  * Interface đại diện cho mối liên kết giữa Nhân viên và Chứng chỉ.
- * Tương ứng với bảng trung gian employees_certifications trong DB.
+ * Tương ứng với bảng employees_certifications trong DB.
  */
 export interface EmployeeCertificationDTO {
   employeeCertificationId?: number;
@@ -13,5 +13,5 @@ export interface EmployeeCertificationDTO {
   certificationName?: string;
   certificationStartDate?: string;
   certificationEndDate?: string;
-  certificationScore?: number;
+  certificationScore?: string;
 }

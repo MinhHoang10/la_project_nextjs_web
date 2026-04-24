@@ -36,21 +36,24 @@ public class MainApplication implements InitializingBean {
     }
 
     /**
-     * Phương thức được gọi tự động sau khi Spring hoàn tất việc Inject Bean properties.
-     * Kiểm tra xem các profile chạy có bị xung đột không (VD: Chạy cả dev và prod cùng lúc).
+     * Phương thức được gọi tự động sau khi Spring hoàn tất việc Inject Bean
+     * properties.
+     * Kiểm tra xem các profile chạy có bị xung đột không (VD: Chạy cả dev và prod
+     * cùng lúc).
      */
     @Override
     public void afterPropertiesSet() throws Exception {
         Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
         if (activeProfiles.contains(Constants.SPRING_PROFILE_DEVELOPMENT)
                 && activeProfiles.contains(Constants.SPRING_PROFILE_PRODUCTION)) {
-            log.error("Bạn đang cấu hình sai phương thức chạy! Ứng dụng không thể chạy "
-                    + "với cả hai biến môi trường 'dev' và 'prod' cùng lúc.");
+            log.error("You are configuring the running method incorrectly! "
+                    + "The application cannot run with both 'dev' and 'prod' environment variables at the same time.");
         }
     }
 
     /**
      * Hàm chính khởi chạy luồng của ứng dụng Back-end.
+     * 
      * @param args tham số dòng lệnh
      */
     public static void main(String[] args) {
@@ -61,8 +64,10 @@ public class MainApplication implements InitializingBean {
     }
 
     /**
-     * Logic in ra Log đường link truy cập API để cho nhà phát triển tiện click vào mở trang
+     * Logic in ra Log đường link truy cập API để cho nhà phát triển tiện click vào
+     * mở trang
      * khi dự án Start thành công.
+     * 
      * @param env môi trường Spring chứa các biến config
      */
     private static void logApplicationStartup(Environment env) {
@@ -84,14 +89,14 @@ public class MainApplication implements InitializingBean {
         }
 
         String textBlock = """
-                
+
                 ----------------------------------------------------------
                 Application '{}' is running! Access URLs:
                 Local: \t\t{}://localhost:{}{}
                 External: \t{}://{}:{}{}
                 Profile(s): {}
                 ----------------------------------------------------------
-                
+
                 """;
 
         log.info(textBlock, env.getProperty("spring.application.name"),

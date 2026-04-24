@@ -18,7 +18,7 @@ import java.util.List;
  * @author Nguyen Huy Hoang
  */
 @RestController
-@RequestMapping("/certification")
+@RequestMapping("/api/certifications")
 public class CertificationController {
 
     private final CertificationService certificationService;
@@ -29,9 +29,8 @@ public class CertificationController {
 
     /**
      * API trả về Cấp độ chuyên môn tiếng Nhật dùng làm Dropdown menu.
-     * URI đích: GET /api/certifications
      * 
-     * @return List dữ liệu dạng JSON.
+     * @return List dữ liệu dạng JSON
      */
     @GetMapping
     public ResponseEntity<List<CertificationDTO>> getAllCertifications() {

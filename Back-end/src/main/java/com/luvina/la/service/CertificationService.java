@@ -8,14 +8,15 @@ import com.luvina.la.dto.CertificationDTO;
 import java.util.List;
 
 /**
- * Giao diện định nghĩa các dịch vụ (Service) cho chứng chỉ.
+ * Giao diện định nghĩa các service cho chứng chỉ.
  * 
  * @author Nguyen Huy Hoang
  */
 public interface CertificationService {
-    
+
     /**
-     * Dịch vụ lấy toàn bộ danh sách chứng chỉ tĩnh.
+     * Lấy toàn bộ danh sách chứng chỉ.
+     * 
      * @return Danh sách DTO chứng chỉ
      */
     List<CertificationDTO> getAllCertifications();

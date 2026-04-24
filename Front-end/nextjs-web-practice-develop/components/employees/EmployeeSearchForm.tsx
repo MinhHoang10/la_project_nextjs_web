@@ -5,6 +5,8 @@
 import React from 'react';
 import { DepartmentDTO } from '@/types/department';
 import { useRouter } from 'next/navigation';
+import { getEmployeeLabel } from '@/lib/validation/employee';
+import { QUERY_PARAMS, APP_MODES } from '@/lib/constants/common';
 
 /**
  * Các tham số (Props) truyền từ trang List xuống cho Component Tìm kiếm.
@@ -38,7 +40,7 @@ export function EmployeeSearchForm({
       <form className="c-form" onSubmit={onSubmit}>
         <ul className="d-flex">
           <li className="form-group row">
-            <label className="col-form-label">氏名:</label>
+            <label className="col-form-label">{getEmployeeLabel('employeeName')}:</label>
             <div className="col-sm">
               <input
                 type="text"
@@ -49,7 +51,7 @@ export function EmployeeSearchForm({
             </div>
           </li>
           <li className="form-group row">
-            <label className="col-form-label">グループ:</label>
+            <label className="col-form-label">{getEmployeeLabel('departmentId')}:</label>
             <div className="col-sm">
               <select
                 value={selectedDeptId || ''}
@@ -69,7 +71,7 @@ export function EmployeeSearchForm({
               <button type="submit" className="btn btn-primary btn-sm">検索</button>
               <button
                 type="button"
-                onClick={() => router.push('/employees/adm004?mode=add')}
+                onClick={() => router.push(`/employees/adm004?${QUERY_PARAMS.MODE}=${APP_MODES.ADD}`)}
                 className="btn btn-secondary btn-sm"
               >
                 新規追加

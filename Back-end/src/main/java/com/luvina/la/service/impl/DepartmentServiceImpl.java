@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Hiện thực chi tiết (Implementation) của dịch vụ Department.
+ * Lớp cài đặt chi tiết service Department.
  * 
  * @author Nguyen Huy Hoang
  */
@@ -28,7 +28,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     /**
-     * lấy danh sách phòng ban đổ về Client.
+     * Lấy danh sách phòng ban.
      */
     @Override
     public List<DepartmentDTO> getAllDepartments() {

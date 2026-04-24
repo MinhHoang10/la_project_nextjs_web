@@ -5,6 +5,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { EmployeeDTO } from '@/types/employee';
+import { getEmployeeLabel } from '@/lib/validation/employee';
 
 /**
  * Cấu hình tham số đánh dấu Cột nào đang được Sort (Tăng/Giảm dần).
@@ -35,21 +36,21 @@ export function EmployeeTable({ employees, sortConfig, onSort }: EmployeeTablePr
   return (
     <>
       <div className="css-grid-table-header">
-        <div>ID</div>
+        <div>{getEmployeeLabel('employeeId')}</div>
         <div className="cursor-pointer" onClick={() => onSort('employeeName')}>
-          氏名 {getSortIcon('employeeName')}
+          {getEmployeeLabel('employeeName')} {getSortIcon('employeeName')}
         </div>
-        <div>生年月日</div>
-        <div>グループ</div>
-        <div>メールアドレス</div>
-        <div>電話番号</div>
+        <div>{getEmployeeLabel('employeeBirthDate')}</div>
+        <div>{getEmployeeLabel('departmentId')}</div>
+        <div>{getEmployeeLabel('employeeEmail')}</div>
+        <div>{getEmployeeLabel('employeeTelephone')}</div>
         <div className="cursor-pointer" onClick={() => onSort('certificationName')}>
-          日本語能力 {getSortIcon('certificationName')}
+          {getEmployeeLabel('certificationName')} {getSortIcon('certificationName')}
         </div>
         <div className="cursor-pointer" onClick={() => onSort('certificationEndDate')}>
-          失効日 {getSortIcon('certificationEndDate')}
+          {getEmployeeLabel('certificationEndDate')} {getSortIcon('certificationEndDate')}
         </div>
-        <div>点数</div>
+        <div>{getEmployeeLabel('certificationScore')}</div>
       </div>
       <div className="css-grid-table-body">
         {employees.length > 0 ? (

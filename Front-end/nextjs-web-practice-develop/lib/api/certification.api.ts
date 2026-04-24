@@ -14,7 +14,7 @@ export const certificationApi = {
    * Dùng để đổ dữ liệu vào thẻ <select> trên giao diện màn hình 004.
    */
   getAllCertifications: async () => {
-    const response = await apiClient.get<CertificationDTO[]>('/certification');
+    const response = await apiClient.get<CertificationDTO[]>('/api/certifications');
     return response.data;
   },
 };

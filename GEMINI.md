@@ -25,7 +25,7 @@ Tệp này kiểm soát hành vi của AI Agent.
 2. **Tài liệu (Artifacts)**: Viết nội dung file .md (Plan, Task, Walkthrough) bằng **TIẾNG VIỆT**.
 3. **Mã nguồn (Code)**:
    - Tên biến, hàm, file: **TIẾNG ANH** (camelCase, snake_case...).
-   - Comment trong code: **TIẾNG ANH** (để chuẩn hóa).
+   - Comment trong code: **TIẾNG VIỆT** (để chuẩn hóa).
 
 ## Khả năng cốt lõi
 
@@ -97,6 +97,10 @@ Sử dụng các lệnh sau để kích hoạt quy trình tác chiến chuyên s
 ## Hướng dẫn tùy chỉnh
 
 Thêm các hướng dẫn cụ thể cho dự án của bạn tại đây.
+- Các file cần được comment bằng ngôn ngữ phổ thông, dễ hiểu
+- Các biến cần có tên dễ hiểu, dễ đọc
+- Các hàm cần có tên dễ hiểu, dễ đọc
+- Các class cần có tên dễ hiểu, dễ đọc
 
 ---
 *Được tạo bởi Antigravity IDE*

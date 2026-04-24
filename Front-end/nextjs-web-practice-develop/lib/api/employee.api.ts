@@ -3,7 +3,7 @@
  * employeeService.ts, 4/13/2026 NguyenHuyHoang
  */
 import { apiClient } from './client';
-import { EmployeeDTO, EmployeeListResponse, EmployeeSearchParams } from '@/types/employee';
+import { EmployeeDTO, EmployeeListResponse, EmployeeSearchParams, EmployeeFormDTO } from '@/types/employee';
 
 /**
  * Khối tiện ích cốt lõi tương tác với các End-point của Nhân viên.
@@ -46,11 +46,35 @@ export const employeeApi = {
     return response.data;
   },
 
-  // /**
-  //  * Truy vấn thông tin độc lập của một nhân viên bằng ID trên URI Path.
-  //  */
-  // getEmployeeById: async (id: number) => {
-  //   const response = await apiClient.get<EmployeeDTO>(`/api/employees/${id}`);
-  //   return response.data;
-  // },
+  /**
+   * Truy vấn thông tin độc lập của một nhân viên bằng ID trên URI Path.
+   */
+  getEmployeeById: async (id: string | number) => {
+    const response = await apiClient.get<EmployeeDTO>(`/api/employee/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Thêm mới nhân viên
+   */
+  createEmployee: async (data: EmployeeFormDTO) => {
+    const response = await apiClient.post('/api/employee', data);
+    return response.data;
+  },
+
+  /**
+   * Validate dữ liệu nhân viên trước khi confirm
+   */
+  validateEmployee: async (data: EmployeeFormDTO) => {
+    const response = await apiClient.post('/api/employee/validate', data);
+    return response.data;
+  },
+
+  /**
+   * Cập nhật thông tin nhân viên
+   */
+  updateEmployee: async (id: number, data: EmployeeFormDTO) => {
+    const response = await apiClient.put(`/api/employee/${id}`, data);
+    return response.data;
+  },
 };

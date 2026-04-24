@@ -18,7 +18,7 @@ import java.util.List;
  * @author Nguyen Huy Hoang
  */
 @RestController
-@RequestMapping("/department")
+@RequestMapping("/api/departments")
 public class DepartmentController {
 
     private final DepartmentService departmentService;
@@ -28,10 +28,9 @@ public class DepartmentController {
     }
 
     /**
-     * API trả về các Nhóm phòng ban có trong công ty dùng làm Dropdown menu.
-     * URI đích: GET /api/departments
+     * API trả về các Nhóm phòng ban có trong công ty dùng làm Dropdown menu
      * 
-     * @return List dữ liệu dạng JSON.
+     * @return List dữ liệu dạng JSON
      */
     @GetMapping
     public ResponseEntity<List<DepartmentDTO>> getAllDepartments() {

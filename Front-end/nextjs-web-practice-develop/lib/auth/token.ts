@@ -2,21 +2,22 @@
  * Copyright(C) 2026 Luvina Software Company
  * token.ts, 4/13/2026 NguyenHuyHoang
  */
+import { storage } from '@/lib/utils/storage';
 
 /**
  * Ghi lại thẻ thông hành JWT và kiểu token vào SessionStorage.
  */
 export function storeToken(token: string, tokenType: string) {
-  sessionStorage.setItem('access_token', token);
-  sessionStorage.setItem('token_type', tokenType);
+  storage.session.set('access_token', token);
+  storage.session.set('token_type', tokenType);
 }
 
 /**
  * Moi token ra từ Session Browser nếu như đã từng lưu lúc Login.
  */
 export function getToken(): { accessToken: string; tokenType: string } | null {
-  const accessToken = sessionStorage.getItem('access_token');
-  const tokenType = sessionStorage.getItem('token_type');
+  const accessToken = storage.session.get<string>('access_token');
+  const tokenType = storage.session.get<string>('token_type');
 
   if (accessToken && tokenType) {
     return { accessToken, tokenType };
@@ -28,8 +29,8 @@ export function getToken(): { accessToken: string; tokenType: string } | null {
  * Rửa sạch Session, ép người dùng bị văng khỏi trạng thái đang chạy.
  */
 export function removeToken() {
-  sessionStorage.removeItem('access_token');
-  sessionStorage.removeItem('token_type');
+  storage.session.remove('access_token');
+  storage.session.remove('token_type');
 }
 
 /**

@@ -24,5 +24,4 @@ export interface LoginResponse {
  */
 export interface TokenPayload {
   exp: number; // Ngày hết hạn Timestamp
-  // Khai báo thêm thuộc tính nếu cần ở đây (vd: employeeId)
 }

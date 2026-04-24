@@ -13,8 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Lớp cài đặt chi tiết (Implementation) của dịch vụ Certification.
- * Ủy quyền bằng annotation @Service để Spring Boot khởi tạo tự động.
+ * Lớp cài đặt chi tiết service Certification.
  * 
  * @author Nguyen Huy Hoang
  */

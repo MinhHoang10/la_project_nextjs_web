@@ -27,29 +27,41 @@ public interface EmployeeService {
     /**
      * Lấy danh sách nhân viên đã được phân trang và sắp xếp theo yêu cầu.
      * 
-     * @param employeeName            Từ khóa tìm kiếm theo tên
-     * @param departmentId            Mã định danh phòng ban
-     * @param sortEmployeeName        Hướng sắp xếp theo tên (asc/desc)
-     * @param sortCertificationName   Hướng sắp xếp theo tên chứng chỉ (asc/desc)
-     * @param sortEndDate             Hướng sắp xếp theo ngày hết hạn (asc/desc)
-     * @param limit                   Số lượng bản ghi tối đa trên một trang
-     * @param offset                  Vị trí bắt đầu lấy dữ liệu
+     * @param employeeName          Từ khóa tìm kiếm theo tên
+     * @param departmentId          Mã định danh phòng ban
+     * @param sortEmployeeName      Hướng sắp xếp theo tên (asc/desc)
+     * @param sortCertificationName Hướng sắp xếp theo tên chứng chỉ (asc/desc)
+     * @param sortEndDate           Hướng sắp xếp theo ngày hết hạn (asc/desc)
+     * @param limit                 Số lượng bản ghi tối đa trên một trang
+     * @param offset                Vị trí bắt đầu lấy dữ liệu
      * @return Danh sách các đối tượng EmployeeDTO chứa thông tin cần hiển thị
      */
     List<EmployeeDTO> getListEmployee(
-            String employeeName, 
-            Long departmentId, 
-            String sortEmployeeName, 
-            String sortCertificationName, 
-            String sortEndDate, 
-            Integer limit, 
+            String employeeName,
+            Long departmentId,
+            String sortEmployeeName,
+            String sortCertificationName,
+            String sortEndDate,
+            Integer limit,
             Integer offset);
 
     /**
      * Truy xuất thông tin chi tiết của một nhân viên bằng ID.
-     * 
+     *
      * @param id Mã định danh của nhân viên
      * @return DTO chứa thông tin chi tiết nhân viên
      */
     EmployeeDTO getEmployeeById(Long id);
+
+    /**
+     * Thêm mới một nhân viên vào hệ thống.
+     *
+     * @param request Dữ liệu form từ client (đã pass validation)
+     * @return ID của nhân viên vừa được tạo
+     */
+    Long addEmployee(com.luvina.la.payload.EmployeeRequest request);
+
+    /*
+    void updateEmployee(Long id, com.luvina.la.payload.EmployeeRequest request);
+    */
 }

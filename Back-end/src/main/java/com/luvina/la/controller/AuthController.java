@@ -30,7 +30,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 /**
- * Controller chuyên trách xử lý thông tin Đăng nhập và Xác thực người dùng (Authentication).
+ * Controller xử lý thông tin Đăng nhập và Xác thực người dùng.
  * 
  * @author Nguyen Huy Hoang
  */
@@ -43,7 +43,8 @@ public class AuthController {
     final UserDetailsServiceImpl userDetailsService;
     final MessageSource messageSource;
 
-    AuthController(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserDetailsServiceImpl userDetailsService, MessageSource messageSource) {
+    AuthController(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider,
+            UserDetailsServiceImpl userDetailsService, MessageSource messageSource) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
@@ -51,12 +52,14 @@ public class AuthController {
     }
 
     /**
-     * API thực hiện xác thực thông tin đăng nhập từ màn hình Front-end cung cấp.
-     * Cung cấp lại một chuỗi JWT Access Token dùng làm chìa khóa cho các request về sau.
+     * API thực hiện xác thực thông tin đăng nhập từ màn hình Front-end
+     * Cung cấp lại một chuỗi JWT Access Token dùng làm chìa khóa cho các request về
+     * sau
      *
      * @param loginRequest Chứa username và password do người dùng submit
-     * @param request Cấu trúc HTTP Request gốc tải lên
-     * @return Chuỗi Json phản hồi (thành công chứa Bearer token, thất bại chứa List Errors)
+     * @param request      HTTP Request gốc
+     * @return Json phản hồi (thành công chứa Bearer token, thất bại chứa List
+     *         Errors)
      */
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
@@ -66,17 +69,15 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
-            
-            // Nếu qua ải kiểm định, nhét vào Spring Security Scope
+                            loginRequest.getPassword()));
+
+            // Nếu qua ải kiểm định, đưa vào Spring Security Scope
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            
-            // Nung token
+
+            // Tạo token
             String accessToken = tokenProvider.generateToken((AuthUserDetails) authentication.getPrincipal());
             return new LoginResponse(accessToken);
-            
+
         } catch (UsernameNotFoundException | BadCredentialsException ex) {
             log.warn(ex.getMessage());
             errors.put("code", AppConstants.LOGIN_FAILED_CODE); // Mã phụ báo hiệu sai username/password
@@ -90,10 +91,10 @@ public class AuthController {
     }
 
     /**
-     * API bí mật dùng để gỡ rối, test thử xem Token hiện tại có vượt qua được cổng Auth không.
-     * Yêu cầu gắn Token ở Header HTTP trước khi Request.
+     * API dùng để test thử xem Token hiện tại có vượt qua được cổng Auth không
+     * Yêu cầu gắn Token ở Header HTTP trước khi Request
      *
-     * @return Dòng trạng thái báo Token là có thực và còn hạn
+     * @return Trạng thái Token
      */
     @RequestMapping("/test-auth")
     public Map<String, String> testAuth() {
