@@ -5,26 +5,49 @@
 'use client';
 
 import { useADM005 } from '@/hooks/useADM005';
-import { useADM004 } from '@/hooks/useADM004';
 import { useEffect, useState } from 'react';
 import { getEmployeeLabel } from '@/lib/validation/employee';
+import { departmentApi } from '@/lib/api/department.api';
+import { certificationApi } from '@/lib/api/certification.api';
+import { DepartmentDTO } from '@/types/department';
+import { CertificationDTO } from '@/types/certification';
 
 export default function EmployeeConfirmForm() {
+  // lấy dữ liệu trong session
   const { getEmployeeFromSession, handleBack, handleOK } = useADM005();
-  const { departments, certifications } = useADM004(); // Sử dụng logic tải dữ liệu danh sách từ ADM004
+  
+  // state để lưu dữ liệu
   const [data, setData] = useState<any>(null);
+  const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
+  const [certifications, setCertifications] = useState<CertificationDTO[]>([]);
 
+  // call API get dữ liệu trong session và master data
   useEffect(() => {
     const sessionData = getEmployeeFromSession();
     setData(sessionData);
+
+    const loadMasterData = async () => {
+      try {
+        const [deptData, certData] = await Promise.all([
+          departmentApi.getAllDepartments(),
+          certificationApi.getAllCertifications()
+        ]);
+        setDepartments(deptData);
+        setCertifications(certData);
+      } catch (error) {
+        // Có thể navigate sang trang lỗi tùy ý
+      }
+    };
+
+    loadMasterData();
   }, []);
 
   if (!data) {
     return <div className="text-center p-4">Không tìm thấy dữ liệu xác nhận.</div>;
   }
 
-  const departmentName = departments.find(d => d.departmentId === data.departmentId)?.departmentName || '';
-  const certificationName = certifications.find(c => c.certificationId === data.certificationId)?.certificationName || '';
+  const departmentName = departments.find(d => d.departmentId === Number(data.departmentId))?.departmentName || '';
+  const certificationName = certifications.find(c => c.certificationId === Number(data.certificationId))?.certificationName || '';
 
   return (
     <div className="row">

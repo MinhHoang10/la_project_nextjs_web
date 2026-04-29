@@ -40,6 +40,31 @@ export interface PageResponse<T> {
   empty: boolean;
 }
 
+export interface CertificationDetail {
+  certificationId?: number;
+  certificationName?: string;
+  startDate?: string;
+  endDate?: string;
+  score?: number;
+}
+
+/**
+ * Lớp cấu trúc trả về cho API chi tiết nhân viên (ADM003)
+ */
+export interface EmployeeDetailResponse {
+  code: number;
+  employeeId?: number;
+  employeeName?: string;
+  employeeBirthDate?: string;
+  departmentId?: number;
+  departmentName?: string;
+  employeeEmail?: string;
+  employeeTelephone?: string;
+  employeeNameKana?: string;
+  employeeLoginId?: string;
+  certifications?: CertificationDetail[];
+}
+
 /**
  * Lớp cấu trúc trả về chuẩn cho API danh sách nhân viên từ Backend
  */
@@ -68,4 +93,22 @@ export interface EmployeeSearchParams {
  */
 export interface EmployeeFormDTO extends EmployeeDTO {
   employeeLoginPasswordConfirm?: string;
+}
+
+/** Đối tượng lỗi cho mỗi trường trong form */
+export interface FieldErrors {
+  [key: string]: string | undefined;
+  employeeLoginId?: string;
+  departmentId?: string;
+  employeeName?: string;
+  employeeNameKana?: string;
+  employeeBirthDate?: string;
+  employeeEmail?: string;
+  employeeTelephone?: string;
+  employeeLoginPassword?: string;
+  employeeLoginPasswordConfirm?: string;
+  certificationId?: string;
+  certificationStartDate?: string;
+  certificationEndDate?: string;
+  certificationScore?: string;
 }

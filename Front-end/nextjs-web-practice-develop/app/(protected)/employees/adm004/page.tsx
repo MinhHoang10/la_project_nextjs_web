@@ -1,12 +1,15 @@
+/**
+ * Copyright(C) 2026 Luvina Software Company
+ * page.tsx (ADM004), 4/24/2026 Nguyen Huy Hoang
+ */
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
 import { Suspense } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import EmployeeInputForm from '@/components/employees/EmployeeInputForm';
 
-
 /**
- * Trang chỉnh sửa nhân viên
+ * Trang thêm mới/chỉnh sửa nhân viên (ADM004).
  */
 export default function EmployeeEditPage() {
   useAuth();

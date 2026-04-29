@@ -11,13 +11,18 @@ import { employeeApi } from '@/lib/api/employee.api';
 import { storage } from '@/lib/utils/storage';
 import { DepartmentDTO } from '@/types/department';
 import { CertificationDTO } from '@/types/certification';
-import { EmployeeFormDTO } from '@/types/employee';
-import { useADM005 } from './useADM005';
 import {
+  getEmployeeFromSession,
+  clearEmployeeSession,
+  setEmployeeToSession
+} from '@/lib/utils/employeeSession';
+import {
+  EmployeeFormDTO,
   FieldErrors,
-} from '@/lib/validation/adm004.validation';
-import { employeeSchema } from '@/lib/validation/employee';
+} from '@/types/employee';
+import { employeeSchema, resolveErrorMessage } from '@/lib/validation/employee';
 import { QUERY_PARAMS, APP_MODES } from '@/lib/constants/common';
+import { mapLabelToField } from '@/lib/constants/labels';
 
 export function useADM004() {
   const router = useRouter();
@@ -25,7 +30,6 @@ export function useADM004() {
   const mode = searchParams.get(QUERY_PARAMS.MODE) || APP_MODES.ADD;
   const id = searchParams.get(QUERY_PARAMS.ID);
   const errorParam = searchParams.get(QUERY_PARAMS.ERROR); // Tham số lỗi từ ADM005 (VD: ER003)
-  const { getEmployeeFromSession, clearStorageSession } = useADM005();
 
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
   const [certifications, setCertifications] = useState<CertificationDTO[]>([]);
@@ -80,7 +84,6 @@ export function useADM004() {
           }
         }
       } catch (error) {
-        console.error('Error loading initialization data:', error);
         router.push('/employees/system_error');
       } finally {
         setLoadingInitial(false);
@@ -90,20 +93,39 @@ export function useADM004() {
   }, [mode, id]);
 
   const handleInitAdd = () => {
-    // clearStorageSession();
+    clearEmployeeSession();
   };
 
   const handleInitEdit = async (employeeId: number) => {
-    console.log('Loading employee data for edit, id:', employeeId);
-    // TODO: Lấy dữ liệu nhân viên từ API và cập nhật formData
-  };
+    try {
+      const data = await employeeApi.getEmployeeById(employeeId);
 
-  // const handleInitBackFromConfirm = () => {
-  //   const sessionEmployee = getEmployeeFromSession();
-  //   if (sessionEmployee) {
-  //     setFormData(sessionEmployee);
-  //   }
-  // };
+      const newFormData: EmployeeFormDTO = {
+        employeeId: data.employeeId,
+        employeeLoginId: data.employeeLoginId || '',
+        departmentId: data.departmentId,
+        employeeName: data.employeeName || '',
+        employeeNameKana: data.employeeNameKana || '',
+        employeeBirthDate: data.employeeBirthDate?.replaceAll('-', '/') || '',
+        employeeEmail: data.employeeEmail || '',
+        employeeTelephone: data.employeeTelephone || '',
+        employeeLoginPassword: '', // Mật khẩu không trả về
+        employeeLoginPasswordConfirm: '',
+      };
+
+      if (data.certifications && data.certifications.length > 0) {
+        const cert = data.certifications[0];
+        newFormData.certificationId = cert.certificationId;
+        newFormData.certificationStartDate = cert.startDate?.replaceAll('-', '/') || '';
+        newFormData.certificationEndDate = cert.endDate?.replaceAll('-', '/') || '';
+        newFormData.certificationScore = cert.score?.toString() || '';
+      }
+
+      setFormData(newFormData);
+    } catch (error) {
+      router.push('/employees/system_error');
+    }
+  };
 
   /**
    * Cập nhật dữ liệu và kiểm tra lỗi
@@ -152,15 +174,26 @@ export function useADM004() {
   const handleConfirm = async () => {
     // Bước 1: Validate client-side với Zod
     const result = employeeSchema.safeParse(formData);
+    const newErrors: FieldErrors = {};
 
     if (!result.success) {
-      const newErrors: FieldErrors = {};
       result.error.issues.forEach((issue) => {
         const path = issue.path[0] as keyof FieldErrors;
         if (path && !newErrors[path]) {
           newErrors[path] = issue.message;
         }
       });
+    }
+
+    // Bắt buộc password khi ADD
+    if (mode === APP_MODES.ADD || mode === APP_MODES.BACK) {
+      const isActuallyAdd = formData.employeeId === undefined || formData.employeeId === null;
+      if (isActuallyAdd && !formData.employeeLoginPassword) {
+        newErrors.employeeLoginPassword = resolveErrorMessage('ER001', 'employeeLoginPassword');
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -170,25 +203,38 @@ export function useADM004() {
     try {
       await employeeApi.validateEmployee(formData);
 
-      storage.session.set('adm004_employee_data', formData);
+      setEmployeeToSession(formData);
       router.push('/employees/adm005');
     } catch (error: any) {
       const backendData = error?.response?.data;
-      const backendErrors: any[] = backendData?.errors || [];
+      // Spring Boot trả về danh sách lỗi trong mảng `messages` (không phải `errors`)
+      const backendErrors: any[] = backendData?.messages || [];
 
       if (error?.response?.status === 400 && backendErrors.length > 0) {
         const newErrors: FieldErrors = { ...errors };
+
         backendErrors.forEach((err: any) => {
-          const field = err.params?.[0] as keyof FieldErrors;
+          let field: keyof FieldErrors | null = null;
+
+          // ER012 (Lỗi ngày hết hạn) không có params từ backend
+          if (err.code === 'ER012') {
+            field = 'certificationEndDate';
+          } else {
+            const label = err.params?.[0]; // VD: "氏名"
+            if (label) {
+              field = mapLabelToField(label);
+            }
+          }
+
           if (field) {
             newErrors[field] = err.code;
           }
         });
+
         setErrors(newErrors);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         // Các lỗi khác (500, Network Error, etc.) -> Chuyển sang màn hình System Error
-        console.error('Unexpected error during validation:', error);
         router.push('/employees/system_error');
       }
     }

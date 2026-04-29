@@ -24,25 +24,6 @@ import java.util.List;
 @RestControllerAdvice
 public class ValidationExceptionHandler {
 
-    // /**
-    // * Xử lý lỗi validation từ các Annotation (nếu có dùng).
-    // */
-    // @ExceptionHandler(MethodArgumentNotValidException.class)
-    // public ResponseEntity<EmployeeResponse>
-    // handleValidationExceptions(MethodArgumentNotValidException ex) {
-    // List<MessageResponse> errors = new ArrayList<>();
-    // ex.getBindingResult().getAllErrors().forEach(error -> {
-    // String fieldName = ((FieldError) error).getField();
-    // String errorCode = error.getDefaultMessage();
-    // errors.add(new MessageResponse(errorCode, List.of(fieldName)));
-    // });
-
-    // return new ResponseEntity<>(
-    // EmployeeResponse.validationError(AppConstants.BAD_REQUEST_CODE, errors),
-    // HttpStatus.BAD_REQUEST
-    // );
-    // }
-
     /**
      * Trình xử lý lỗi hệ thống toàn cục.
      * Bắt mọi Exception chưa được xử lý và trả về HTTP 500 với mã ER015.

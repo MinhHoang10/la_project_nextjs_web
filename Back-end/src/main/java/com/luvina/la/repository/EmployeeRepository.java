@@ -56,7 +56,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
         * @return Tổng số lượng bản ghi thỏa mãn
         */
        @Query("SELECT COUNT(e) FROM Employee e " +
-                     "LEFT JOIN e.department d " +
+                     "JOIN e.department d " +
                      "WHERE e.employeeRole = 0 " +
                      "AND (:employeeName IS NULL OR :employeeName = '' OR LOWER(e.employeeName) LIKE LOWER(CONCAT('%', :employeeName, '%')) ESCAPE '!') "
                      +
@@ -83,7 +83,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                      "ec.employeeCertificationId, c.certificationId, c.certificationName, ec.startDate, ec.endDate, ec.score) "
                      +
                      "FROM Employee e " +
-                     "LEFT JOIN e.department d " +
+                     "JOIN e.department d " +
                      "LEFT JOIN e.employeesCertifications ec " +
                      "LEFT JOIN ec.certification c " +
                      "WHERE e.employeeRole = 0 " +
@@ -109,7 +109,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                      "ec.employeeCertificationId, c.certificationId, c.certificationName, ec.startDate, ec.endDate, ec.score) "
                      +
                      "FROM Employee e " +
-                     "LEFT JOIN e.department d " +
+                     "JOIN e.department d " +
                      "LEFT JOIN e.employeesCertifications ec " +
                      "LEFT JOIN ec.certification c " +
                      "WHERE e.employeeId = :id")

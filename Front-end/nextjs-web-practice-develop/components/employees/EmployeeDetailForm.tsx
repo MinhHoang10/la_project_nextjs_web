@@ -1,31 +1,27 @@
 /**
  * Copyright(C) 2026 Luvina Software Company
- * EmployeeViewForm.tsx, 4/24/2026 Nguyen Huy Hoang
+ * EmployeeDetailForm.tsx, 4/24/2026 Nguyen Huy Hoang
  */
 'use client';
 
-import { EmployeeDTO } from '@/types/employee';
+import { useADM003 } from '@/hooks/useADM003';
 
-/**
- * Định nghĩa các thuộc tính đầu vào cho Component EmployeeViewForm.
- */
-interface EmployeeViewFormProps {
-  employee: EmployeeDTO;   // Đối tượng chứa thông tin nhân viên
-  onEdit: () => void;      // Hàm xử lý sự kiện nút Chỉnh sửa
-  onBack: () => void;      // Hàm xử lý sự kiện nút Quay lại
-  onDelete: () => void;    // Hàm xử lý sự kiện nút Xóa
-}
+export default function EmployeeDetailForm() {
+  const { employee, loading, handleEdit, handleBack, handleDelete } = useADM003();
 
-/**
- * Component hiển thị thông tin chi tiết của nhân viên dưới dạng Form.
- * Chỉ chịu trách nhiệm hiển thị dữ liệu (Presentational Component).
- */
-export default function EmployeeViewForm({ employee, onEdit, onBack, onDelete }: EmployeeViewFormProps) {
+  if (loading) {
+    return <div className="p-4 text-center font-weight-bold">Đang tải dữ liệu nhân viên...</div>;
+  }
+
+  if (!employee) {
+    return <div className="p-4 text-center text-danger">Không tìm thấy thông tin nhân viên hoặc đã bị xóa.</div>;
+  }
+
   return (
     <form className="c-form box-shadow">
       <ul className="show-data">
         <li className="title">情報確認</li>
-        
+
         {/* Thông tin cơ bản */}
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">アカウント名</label>
@@ -56,49 +52,53 @@ export default function EmployeeViewForm({ employee, onEdit, onBack, onDelete }:
           <div className="col-sm col-sm-10">{employee.employeeTelephone}</div>
         </li>
 
-        {/* Thông tin chứng chỉ (Chỉ hiển thị nếu nhân viên có chứng chỉ) */}
-        {employee.certificationName && (
-          <>
-            <li className="title mt-12"><a href="#!">日本語能力</a></li>
-            <li className="form-group row d-flex">
-              <label className="col-form-label col-sm-2">資格</label>
-              <div className="col-sm col-sm-10">{employee.certificationName}</div>
-            </li>
-            <li className="form-group row d-flex">
-              <label className="col-form-label col-sm-2">資格交付日</label>
-              <div className="col-sm col-sm-10">{employee.certificationStartDate?.replaceAll('-', '/')}</div>
-            </li>
-            <li className="form-group row d-flex">
-              <label className="col-form-label col-sm-2">失効日</label>
-              <div className="col-sm col-sm-10">{employee.certificationEndDate?.replaceAll('-', '/')}</div>
-            </li>
-            <li className="form-group row d-flex">
-              <label className="col-form-label col-sm-2">点数</label>
-              <div className="col-sm col-sm-10">{employee.certificationScore}</div>
-            </li>
-          </>
-        )}
+        {/* Thông tin chứng chỉ (Luôn hiển thị) */}
+        <li className="title mt-12"><a href="#!">日本語能力</a></li>
+        <li className="form-group row d-flex">
+          <label className="col-form-label col-sm-2">資格</label>
+          <div className="col-sm col-sm-10">
+            {employee.certifications && employee.certifications.length > 0 ? employee.certifications[0].certificationName : ''}
+          </div>
+        </li>
+        <li className="form-group row d-flex">
+          <label className="col-form-label col-sm-2">資格交付日</label>
+          <div className="col-sm col-sm-10">
+            {employee.certifications && employee.certifications.length > 0 ? employee.certifications[0].startDate?.replaceAll('-', '/') : ''}
+          </div>
+        </li>
+        <li className="form-group row d-flex">
+          <label className="col-form-label col-sm-2">失効日</label>
+          <div className="col-sm col-sm-10">
+            {employee.certifications && employee.certifications.length > 0 ? employee.certifications[0].endDate?.replaceAll('-', '/') : ''}
+          </div>
+        </li>
+        <li className="form-group row d-flex">
+          <label className="col-form-label col-sm-2">点数</label>
+          <div className="col-sm col-sm-10">
+            {employee.certifications && employee.certifications.length > 0 ? employee.certifications[0].score : ''}
+          </div>
+        </li>
 
         {/* Nhóm nút bấm hành động */}
         <li className="form-group row d-flex">
           <div className="btn-group col-sm col-sm-10 ml">
-            <button 
-              type="button" 
-              onClick={onEdit} 
+            <button
+              type="button"
+              onClick={handleEdit}
               className="btn btn-primary btn-sm"
             >
               編集
             </button>
-            <button 
-              type="button" 
-              onClick={onDelete}
+            <button
+              type="button"
+              onClick={handleDelete}
               className="btn btn-secondary btn-sm"
             >
               削除
             </button>
-            <button 
-              type="button" 
-              onClick={onBack} 
+            <button
+              type="button"
+              onClick={handleBack}
               className="btn btn-secondary btn-sm"
             >
               戻る

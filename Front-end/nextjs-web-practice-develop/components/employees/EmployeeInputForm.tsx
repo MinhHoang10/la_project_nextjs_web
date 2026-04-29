@@ -8,7 +8,7 @@
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useADM004 } from '@/hooks/useADM004';
-import { resolveErrorMessage } from '@/lib/validation/adm004.validation';
+import { resolveErrorMessage } from '@/lib/validation/employee';
 import { EmployeeFormDTO } from '@/types/employee';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -57,13 +57,20 @@ export default function EmployeeInputForm() {
   const certificationEndDateRef = useRef<DatePicker>(null);
 
   // Đồng bộ date strings và Date objects cho react-datepicker
-  const getDateObj = (dateStr?: string) =>
-    dateStr ? parse(dateStr, 'yyyy/MM/dd', new Date()) : null;
+  const getDateObj = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const parsed = parse(dateStr, 'yyyy/MM/dd', new Date());
+    return isNaN(parsed.getTime()) ? null : parsed;
+  };
   const getDateStr = (date: Date | null) =>
     date ? format(date, 'yyyy/MM/dd') : '';
 
   const handleBack = () => {
-    router.push('/employees/adm002');
+    if (formData.employeeId) {
+      router.push(`/employees/adm003/${formData.employeeId}`);
+    } else {
+      router.push('/employees/adm002');
+    }
   };
 
   // Xác định xem đã chọn chứng chỉ hay chưa
@@ -169,9 +176,15 @@ export default function EmployeeInputForm() {
                   ref={birthDateRef}
                   placeholderText="yyyy/MM/dd"
                   selected={getDateObj(formData.employeeBirthDate)}
-                  onChange={(date: Date | null) =>
-                    updateAndValidateField('employeeBirthDate', getDateStr(date))
-                  }
+                  onChange={(date: Date | null, e: React.SyntheticEvent<any> | undefined) => {
+                    if (e && e.type === 'change') return;
+                    updateAndValidateField('employeeBirthDate', getDateStr(date));
+                  }}
+                  onChangeRaw={(e: any) => {
+                    if (e && e.target !== undefined) {
+                      updateAndValidateField('employeeBirthDate', e.target.value);
+                    }
+                  }}
                   dateFormat="yyyy/MM/dd"
                 />
                 <span
@@ -310,9 +323,15 @@ export default function EmployeeInputForm() {
                   ref={certificationStartDateRef}
                   placeholderText="yyyy/MM/dd"
                   selected={getDateObj(formData.certificationStartDate)}
-                  onChange={(date: Date | null) =>
-                    updateAndValidateField('certificationStartDate', getDateStr(date))
-                  }
+                  onChange={(date: Date | null, e: React.SyntheticEvent<any> | undefined) => {
+                    if (e && e.type === 'change') return;
+                    updateAndValidateField('certificationStartDate', getDateStr(date));
+                  }}
+                  onChangeRaw={(e: any) => {
+                    if (e && e.target !== undefined) {
+                      updateAndValidateField('certificationStartDate', e.target.value);
+                    }
+                  }}
                   dateFormat="yyyy/MM/dd"
                   disabled={!hasCertification}
                 />
@@ -341,9 +360,15 @@ export default function EmployeeInputForm() {
                   ref={certificationEndDateRef}
                   placeholderText="yyyy/MM/dd"
                   selected={getDateObj(formData.certificationEndDate)}
-                  onChange={(date: Date | null) =>
-                    updateAndValidateField('certificationEndDate', getDateStr(date))
-                  }
+                  onChange={(date: Date | null, e: React.SyntheticEvent<any> | undefined) => {
+                    if (e && e.type === 'change') return;
+                    updateAndValidateField('certificationEndDate', getDateStr(date));
+                  }}
+                  onChangeRaw={(e: any) => {
+                    if (e && e.target !== undefined) {
+                      updateAndValidateField('certificationEndDate', e.target.value);
+                    }
+                  }}
                   dateFormat="yyyy/MM/dd"
                   disabled={!hasCertification}
                 />

@@ -31,6 +31,16 @@ export const employeeSchema = z.object({
 
   employeeBirthDate: z.string()
     .min(1, err.ER001(L.BIRTH_DATE))
+    .regex(/^\d{4}\/\d{2}\/\d{2}$/, err.ER005(L.BIRTH_DATE, 'yyyy/MM/dd'))
+    .refine((val) => {
+      if (!/^\d{4}\/\d{2}\/\d{2}$/.test(val)) return true;
+      const parts = val.split('/');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      const date = new Date(y, m - 1, d);
+      return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+    }, err.ER011(L.BIRTH_DATE))
     .describe(L.BIRTH_DATE),
 
   employeeEmail: z.string()
@@ -79,16 +89,38 @@ export const employeeSchema = z.object({
   if (data.certificationId && data.certificationId > 0) {
     if (!data.certificationStartDate) {
       ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: err.ER001(L.CERT_START_DATE) });
+    } else {
+      if (!/^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationStartDate)) {
+        ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: err.ER005(L.CERT_START_DATE, 'yyyy/MM/dd') });
+      } else {
+        const parts = data.certificationStartDate.split('/');
+        const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (date.getFullYear() !== parseInt(parts[0], 10) || date.getMonth() !== parseInt(parts[1], 10) - 1 || date.getDate() !== parseInt(parts[2], 10)) {
+          ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: err.ER011(L.CERT_START_DATE) });
+        }
+      }
     }
+
     if (!data.certificationEndDate) {
       ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: err.ER001(L.CERT_END_DATE) });
+    } else {
+      if (!/^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationEndDate)) {
+        ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: err.ER005(L.CERT_END_DATE, 'yyyy/MM/dd') });
+      } else {
+        const parts = data.certificationEndDate.split('/');
+        const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (date.getFullYear() !== parseInt(parts[0], 10) || date.getMonth() !== parseInt(parts[1], 10) - 1 || date.getDate() !== parseInt(parts[2], 10)) {
+          ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: err.ER011(L.CERT_END_DATE) });
+        }
+      }
     }
+
     if (!data.certificationScore) {
       ctx.addIssue({ code: "custom", path: ['certificationScore'], message: err.ER001(L.CERT_SCORE) });
     }
 
     // Check ngày hết hạn phải sau ngày cấp chứng chỉ (ER012)
-    if (data.certificationStartDate && data.certificationEndDate) {
+    if (data.certificationStartDate && data.certificationEndDate && /^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationStartDate) && /^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationEndDate)) {
       const start = new Date(data.certificationStartDate);
       const end = new Date(data.certificationEndDate);
       if (end < start) {
@@ -120,3 +152,51 @@ export const getEmployeeLabel = (field: string): string => {
 };
 
 export type EmployeeForm = z.infer<typeof employeeSchema>;
+
+import { EmployeeFormDTO } from '@/types/employee';
+
+/** Giới hạn ký tự tối đa cho thông báo lỗi ER006/ER007 */
+const FIELD_MAX_LENGTHS: Partial<Record<keyof EmployeeFormDTO, number>> = {
+  employeeLoginId: 50,
+  employeeName: 125,
+  employeeNameKana: 125,
+  employeeEmail: 125,
+  employeeTelephone: 50,
+  employeeLoginPassword: 50,
+  employeeLoginPasswordConfirm: 50,
+};
+
+/**
+ * Trả về thông báo lỗi dễ đọc từ mã lỗi và khóa trường.
+ */
+export function resolveErrorMessage(
+  errorCode: string,
+  fieldKey: keyof EmployeeFormDTO
+): string {
+  // Lấy nhãn hiển thị chuẩn thông qua getEmployeeLabel
+  const label = getEmployeeLabel(fieldKey) || String(fieldKey);
+  const max = FIELD_MAX_LENGTHS[fieldKey] || 0;
+
+  switch (errorCode) {
+    case 'ER001': return ERROR_MESSAGES.ER001(label);
+    case 'ER002': return ERROR_MESSAGES.ER002(label);
+    case 'ER003': return ERROR_MESSAGES.ER003(label);
+    case 'ER005': return ERROR_MESSAGES.ER005(label, "yyyy/MM/dd");
+    case 'ER006': return ERROR_MESSAGES.ER006(label, max);
+    case 'ER007': return ERROR_MESSAGES.ER007(label, 0, max);
+    case 'ER008': return ERROR_MESSAGES.ER008(label);
+    case 'ER009': return ERROR_MESSAGES.ER009(label);
+    case 'ER011': return ERROR_MESSAGES.ER011(label);
+    case 'ER012': return ERROR_MESSAGES.ER012(label, getEmployeeLabel('certificationStartDate') || '資格交付日');
+    case 'ER017': return ERROR_MESSAGES.ER017();
+    case 'ER018': return ERROR_MESSAGES.ER018(label);
+    case 'ER019': return ERROR_MESSAGES.ER019();
+    default:
+      // Nếu không map được (như lỗi không có tham số ER015), thử dùng trực tiếp nếu có
+      const msgFunc = ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] as any;
+      if (typeof msgFunc === 'function') {
+        try { return msgFunc(label); } catch (e) { return errorCode; }
+      }
+      return errorCode;
+  }
+}

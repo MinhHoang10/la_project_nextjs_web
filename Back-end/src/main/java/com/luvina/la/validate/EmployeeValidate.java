@@ -50,8 +50,13 @@ public class EmployeeValidate {
 
         List<MessageResponse> errors = new ArrayList<>();
 
+        // 0. Kiểm tra Employee ID (chỉ dành cho Edit)
+        if (!isAddMode) {
+            validateEmployeeId(request.getEmployeeId(), empRepo, errors);
+        }
+
         // 1. Kiểm tra Login ID (ER001, ER006, ER019, ER003)
-        validateLoginId(request.getEmployeeLoginId(), isAddMode, empRepo, errors);
+        validateLoginId(request.getEmployeeLoginId(), request.getEmployeeId(), isAddMode, empRepo, errors);
 
         // 2. Kiểm tra Họ tên (ER001, ER006)
         validateRequiredAndLength(request.getEmployeeName(), AppConstants.LABEL_NAME, AppConstants.MAX_LENGTH_NAME,
@@ -86,10 +91,32 @@ public class EmployeeValidate {
         return errors;
     }
 
-    // ── Chi tiết từng hạng mục kiểm tra ──────────────────────────────────────
+    /**
+     * Validate Employee ID cho chế độ Edit.
+     *
+     * @param employeeId ID nhân viên cần kiểm tra
+     * @param empRepo    Repository truy vấn nhân viên
+     * @param errors     Danh sách lỗi tích lũy
+     */
+    private static void validateEmployeeId(Long employeeId, EmployeeRepository empRepo, List<MessageResponse> errors) {
+        if (employeeId == null) {
+            errors.add(buildMessage(AppConstants.ER001, " I D "));
+        } else if (!empRepo.existsById(employeeId)) {
+            throw new com.luvina.la.exception.LogicException(AppConstants.ER013, java.util.Arrays.asList(" I D "));
+        }
+    }
 
-    // Validate login id
-    private static void validateLoginId(String loginId, boolean isAddMode, EmployeeRepository empRepo,
+    /**
+     * Validate Login ID
+     * 
+     * @param loginId
+     * @param currentEmployeeId
+     * @param isAddMode
+     * @param empRepo
+     * @param errors
+     */
+    private static void validateLoginId(String loginId, Long currentEmployeeId, boolean isAddMode,
+            EmployeeRepository empRepo,
             List<MessageResponse> errors) {
         if (isEmpty(loginId)) {
             errors.add(buildMessage(AppConstants.ER001, AppConstants.LABEL_LOGIN_ID));
@@ -97,12 +124,25 @@ public class EmployeeValidate {
             errors.add(buildMessage(AppConstants.ER006, AppConstants.LABEL_LOGIN_ID));
         } else if (!loginId.matches("^[a-zA-Z][a-zA-Z0-9_]*$")) {
             errors.add(buildMessage(AppConstants.ER019, AppConstants.LABEL_LOGIN_ID));
-        } else if (isAddMode && empRepo.existsByEmployeeLoginId(loginId)) {
-            errors.add(buildMessage(AppConstants.ER003, AppConstants.LABEL_LOGIN_ID));
+        } else {
+            if (isAddMode) {
+                if (empRepo.existsByEmployeeLoginId(loginId)) {
+                    errors.add(buildMessage(AppConstants.ER003, AppConstants.LABEL_LOGIN_ID));
+                }
+            } else if (currentEmployeeId != null) {
+                if (empRepo.findByEmployeeLoginIdAndEmployeeIdNot(loginId, currentEmployeeId).isPresent()) {
+                    errors.add(buildMessage(AppConstants.ER003, AppConstants.LABEL_LOGIN_ID));
+                }
+            }
         }
     }
 
-    // Validate tên Kana
+    /**
+     * Validate Name Kana
+     * 
+     * @param nameKana
+     * @param errors
+     */
     private static void validateNameKana(String nameKana, List<MessageResponse> errors) {
         if (isEmpty(nameKana)) {
             errors.add(buildMessage(AppConstants.ER001, AppConstants.LABEL_NAME_KANA));
@@ -113,7 +153,12 @@ public class EmployeeValidate {
         }
     }
 
-    // Validate email
+    /**
+     * Validate Email
+     * 
+     * @param email
+     * @param errors
+     */
     private static void validateEmail(String email, List<MessageResponse> errors) {
         if (isEmpty(email)) {
             errors.add(buildMessage(AppConstants.ER001, AppConstants.LABEL_EMAIL));
@@ -124,7 +169,12 @@ public class EmployeeValidate {
         }
     }
 
-    // Validate số điện thoại
+    /**
+     * Validate Telephone
+     * 
+     * @param tel
+     * @param errors
+     */
     private static void validateTelephone(String tel, List<MessageResponse> errors) {
         if (isEmpty(tel)) {
             errors.add(buildMessage(AppConstants.ER001, AppConstants.LABEL_TELEPHONE));
@@ -135,23 +185,36 @@ public class EmployeeValidate {
         }
     }
 
-    // Validate mật khẩu
+    /**
+     * Validate Password
+     * 
+     * @param pass
+     * @param confirm
+     * @param isAddMode
+     * @param errors
+     */
     private static void validatePassword(String pass, String confirm, boolean isAddMode, List<MessageResponse> errors) {
-        if (isAddMode) {
-            if (isEmpty(pass)) {
-                errors.add(buildMessage(AppConstants.ER001, AppConstants.LABEL_PASSWORD));
-            } else if (pass.length() < AppConstants.MIN_LENGTH_PASSWORD
-                    || pass.length() > AppConstants.MAX_LENGTH_PASSWORD) {
-                errors.add(buildMessage(AppConstants.ER007, AppConstants.LABEL_PASSWORD, "8", "50"));
-            }
+        if (isAddMode && isEmpty(pass)) {
+            errors.add(buildMessage(AppConstants.ER001, AppConstants.LABEL_PASSWORD));
         }
 
-        if (!isEmpty(pass) && !pass.equals(confirm)) {
-            errors.add(buildMessage(AppConstants.ER017, AppConstants.LABEL_PASSWORD_CONFIRM));
+        if (!isEmpty(pass)) {
+            if (pass.length() < AppConstants.MIN_LENGTH_PASSWORD
+                    || pass.length() > AppConstants.MAX_LENGTH_PASSWORD) {
+                errors.add(buildMessage(AppConstants.ER007, AppConstants.LABEL_PASSWORD, "8", "50"));
+            } else if (!pass.equals(confirm)) {
+                errors.add(buildMessage(AppConstants.ER017, AppConstants.LABEL_PASSWORD_CONFIRM));
+            }
         }
     }
 
-    // Validate phòng ban
+    /**
+     * Validate Department
+     * 
+     * @param deptId
+     * @param deptRepo
+     * @param errors
+     */
     private static void validateDepartment(Long deptId, DepartmentRepository deptRepo, List<MessageResponse> errors) {
         if (deptId == null) {
             errors.add(buildMessage(AppConstants.ER002, AppConstants.LABEL_DEPARTMENT));
@@ -160,7 +223,13 @@ public class EmployeeValidate {
         }
     }
 
-    // Validate chứng chỉ
+    /**
+     * Validate Certification
+     * 
+     * @param certReq
+     * @param certRepo
+     * @param errors
+     */
     private static void validateCertification(EmployeeRequest.CertificationRequest certReq,
             CertificationRepository certRepo, List<MessageResponse> errors) {
         String certIdStr = certReq.getCertificationId();
@@ -200,7 +269,11 @@ public class EmployeeValidate {
     }
 
     /**
-     * Kiểm tra ngày tháng với 2 cấp độ: Định dạng (ER005) và Thực tế (ER011).
+     * Validate Date
+     * 
+     * @param dateStr
+     * @param label
+     * @param errors
      */
     private static void validateDate(String dateStr, String label, List<MessageResponse> errors) {
         if (isEmpty(dateStr)) {
@@ -216,7 +289,7 @@ public class EmployeeValidate {
 
         // 2. Kiểm tra ngày có thực không
         try {
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern(AppConstants.DATE_FORMAT)
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu/MM/dd")
                     .withResolverStyle(ResolverStyle.STRICT);
             LocalDate.parse(dateStr, dtf);
         } catch (DateTimeParseException e) {
@@ -224,9 +297,14 @@ public class EmployeeValidate {
         }
     }
 
-    // ── Hàm tiện ích ───────────────────────────────────────
-
-    // Validate độ dài và bắt buộc
+    /**
+     * Validate bắt buộc và độ dài
+     * 
+     * @param value
+     * @param label
+     * @param max
+     * @param errors
+     */
     private static void validateRequiredAndLength(String value, String label, int max, List<MessageResponse> errors) {
         if (isEmpty(value)) {
             errors.add(buildMessage(AppConstants.ER001, label));
@@ -235,17 +313,32 @@ public class EmployeeValidate {
         }
     }
 
-    // Kiểm tra rỗng
+    /**
+     * Validate rỗng
+     * 
+     * @param value
+     * @return boolean
+     */
     private static boolean isEmpty(String value) {
         return value == null || value.trim().isEmpty();
     }
 
-    // Kiểm tra định dạng ngày
+    /**
+     * Validate định dạng ngày
+     * 
+     * @param dateStr
+     * @return boolean
+     */
     private static boolean isValidFormat(String dateStr) {
         return dateStr != null && dateStr.matches("^\\d{4}/\\d{2}/\\d{2}$");
     }
 
-    // Parse ngày
+    /**
+     * Parse ngày
+     * 
+     * @param dateStr
+     * @return LocalDate
+     */
     private static LocalDate parseDate(String dateStr) {
         try {
             return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(AppConstants.DATE_FORMAT));
@@ -254,7 +347,13 @@ public class EmployeeValidate {
         }
     }
 
-    // Tạo message response
+    /**
+     * Tạo đối tượng MessageResponse từ mã lỗi và danh sách tham số.
+     *
+     * @param code   Mã lỗi (ví dụ: ER001, ER006...)
+     * @param params Các tham số bổ sung cho thông điệp lỗi
+     * @return MessageResponse chứa mã lỗi và tham số
+     */
     private static MessageResponse buildMessage(String code, Object... params) {
         return new MessageResponse(code, List.of(params));
     }

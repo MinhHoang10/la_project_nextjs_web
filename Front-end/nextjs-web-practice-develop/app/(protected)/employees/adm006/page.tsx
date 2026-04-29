@@ -1,8 +1,15 @@
+/**
+ * Copyright(C) 2026 Luvina Software Company
+ * page.tsx (ADM006), 4/24/2026 Nguyen Huy Hoang
+ */
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Trang thông báo hoàn tất xử lý (ADM006).
+ */
 export default function EmployeeCompletePage() {
   useAuth();
   const router = useRouter();

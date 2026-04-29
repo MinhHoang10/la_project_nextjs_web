@@ -27,13 +27,18 @@ public class AppConstants {
     public static final String ER009 = "ER009"; // Không phải Katakana
     public static final String ER011 = "ER011"; // Ngày tháng không tồn tại (Ví dụ: ngày 32)
     public static final String ER012 = "ER012"; // Ngày kết hạn phải sau ngày cấp
+    public static final String ER013 = "ER013"; // Không tồn tại trong hệ thống
+    public static final String ER014 = "ER014"; // Không tồn tại nhân viên
+
     public static final String ER015 = "ER015"; // Lỗi hệ thống (System Error)
     public static final String ER017 = "ER017"; // Mật khẩu xác nhận không khớp
     public static final String ER018 = "ER018"; // Số nguyên dương half-size
     public static final String ER019 = "ER019"; // Format LoginID (a-z, 0-9, _)
     public static final String ER021 = "ER021"; // Sort invalid
     public static final String ER022 = "ER022"; // Offset invalid
-    public static final String MSG001 = "MSG001"; // Thêm mới/Cập nhật thành công
+    public static final String MSG001 = "MSG001"; // Thêm mới thành công
+    public static final String MSG002 = "MSG002"; // Cập nhật thành công
+    public static final String MSG003 = "MSG003"; // Xóa thành công
 
     // ===== Mã lỗi nghiệp vụ cho chức năng Đăng nhập (Login) =====
     public static final String LOGIN_FAILED_CODE = "401"; // Sai User/Pass

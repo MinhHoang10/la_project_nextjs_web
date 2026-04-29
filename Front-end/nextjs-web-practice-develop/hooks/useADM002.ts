@@ -58,7 +58,6 @@ export function useADM002() {
         // Gọi API ngay lập tức bằng các tham số cũ vừa lấy ở trên
         await fetchEmployees(0, storedName, parsedDeptId); 
       } catch (error) {
-        console.error('Lỗi trong quá trình khởi tạo dữ liệu ban đầu:', error);
         router.push('/employees/system_error');
       } finally {
         setLoading(false);
@@ -107,14 +106,12 @@ export function useADM002() {
         setTotalElements(data.totalRecords || 0);
         setCurrentPage(page);
       } else {
-        console.error('Lỗi API backend trả về:', data.message);
         setEmployees([]);
         setTotalPages(0);
         setTotalElements(0);
         setCurrentPage(0);
       }
     } catch (error) {
-      console.error('Có lỗi xảy ra khi fetch list nhân viên:', error);
       router.push('/employees/system_error');
     } finally {
       setLoading(false);

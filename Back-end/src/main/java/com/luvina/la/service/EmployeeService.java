@@ -5,6 +5,9 @@
 package com.luvina.la.service;
 
 import com.luvina.la.dto.EmployeeDTO;
+import com.luvina.la.payload.EmployeeDetailResponse;
+import com.luvina.la.payload.EmployeeRequest;
+
 import java.util.List;
 
 /**
@@ -46,12 +49,20 @@ public interface EmployeeService {
             Integer offset);
 
     /**
-     * Truy xuất thông tin chi tiết của một nhân viên bằng ID.
-     *
-     * @param id Mã định danh của nhân viên
-     * @return DTO chứa thông tin chi tiết nhân viên
+     * Lấy thông tin chi tiết nhân viên theo ID phục vụ màn hình chi tiết hoặc edit.
+     * 
+     * @param id Mã định danh nhân viên
+     * @return EmployeeDTO chứa thông tin chi tiết
      */
     EmployeeDTO getEmployeeById(Long id);
+
+    /**
+     * Lấy thông tin chi tiết nhân viên với định dạng API chuẩn (ADM003).
+     * 
+     * @param id Mã định danh nhân viên
+     * @return EmployeeDetailResponse chứa thông tin chi tiết và danh sách chứng chỉ
+     */
+    EmployeeDetailResponse getEmployeeDetailById(Long id);
 
     /**
      * Thêm mới một nhân viên vào hệ thống.
@@ -59,9 +70,22 @@ public interface EmployeeService {
      * @param request Dữ liệu form từ client (đã pass validation)
      * @return ID của nhân viên vừa được tạo
      */
-    Long addEmployee(com.luvina.la.payload.EmployeeRequest request);
+    Long addEmployee(EmployeeRequest request);
 
-    /*
-    void updateEmployee(Long id, com.luvina.la.payload.EmployeeRequest request);
-    */
+    /**
+     * Cập nhật thông tin nhân viên trong hệ thống (ADM004).
+     *
+     * @param request Dữ liệu form từ client (đã qua bước validate)
+     */
+    void editEmployee(EmployeeRequest request);
+
+    /**
+     * Xóa nhân viên theo ID.
+     * Cần xóa chứng chỉ tiếng Nhật trước khi xóa thông tin nhân viên.
+     *
+     * @param id ID của nhân viên cần xóa
+     * @throws LogicException   nếu ID null hoặc không tồn tại
+     * @throws RuntimeException nếu có lỗi trong quá trình xóa (để trigger rollback)
+     */
+    void deleteEmployee(Long id);
 }

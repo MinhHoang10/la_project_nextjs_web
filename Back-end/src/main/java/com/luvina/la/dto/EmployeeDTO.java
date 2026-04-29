@@ -10,9 +10,6 @@ import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 /**
  * Đối tượng Truyền tải Dữ liệu (DTO) tổng hợp toàn bộ thông tin về Nhân viên.
@@ -34,38 +31,24 @@ public class EmployeeDTO implements Serializable {
     private Long employeeId;
 
     /** Tên tài khoản đăng nhập (Dùng để xác thực hệ thống) */
-    @NotBlank(message = "ER001")
-    @Size(max = 50, message = "ER006")
-    @Pattern(regexp = "^[a-zA-Z_][a-zA-Z0-9_]*$", message = "ER019")
     private String employeeLoginId;
 
     /** Họ và tên hiển thị */
-    @NotBlank(message = "ER001")
-    @Size(max = 125, message = "ER006")
     private String employeeName;
 
     /** Họ tên phiên âm (Katakana) */
-    @NotBlank(message = "ER001")
-    @Size(max = 125, message = "ER006")
-    @Pattern(regexp = "^[ァ-ンヴー]+$", message = "ER009")
     private String employeeNameKana;
 
     /** Ngày tháng năm sinh */
     private LocalDate employeeBirthDate;
 
     /** Địa chỉ hòm thư điện tử */
-    @NotBlank(message = "ER001")
-    @Size(max = 125, message = "ER006")
     private String employeeEmail;
 
     /** Số điện thoại liên lạc */
-    @NotBlank(message = "ER001")
-    @Size(max = 50, message = "ER006")
-    @Pattern(regexp = "^[0-9]+$", message = "ER018")
     private String employeeTelephone;
 
     /** Mật khẩu truy cập (Thường chỉ dùng cho nghiệp vụ thêm/sửa, trả về rỗng khi lấy danh sách) */
-    @Size(max = 50, message = "ER006")
     private String employeeLoginPassword;
 
     // ===== Thông tin về đơn vị công tác (Lấy từ bảng Departments) =====

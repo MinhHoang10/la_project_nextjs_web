@@ -2,6 +2,8 @@
  * Copyright(C) 2026 Luvina Software Company
  * EmployeeTable.tsx, 4/13/2026 NguyenHuyHoang
  */
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { EmployeeDTO } from '@/types/employee';
@@ -16,15 +18,15 @@ export interface SortConfig {
   certificationEndDate: 'asc' | 'desc';
 }
 
-/** Tham số (Props) truyền từ phần tử Cha xuống bảng. */
+/** Tham số truyền từ phần tử Cha xuống bảng. */
 interface EmployeeTableProps {
   employees: EmployeeDTO[];
   sortConfig: SortConfig;
-  onSort: (field: keyof SortConfig) => void; // Hàm callback kích hoạt API sort
+  onSort: (field: keyof SortConfig) => void;
 }
 
 /**
- * Component Hiển thị lưới List danh sách dưới dạng CSS Grid thay vì Table truyền thống.
+ * Component Hiển thị lưới List danh sách dưới dạng CSS Grid.
  * Cột có icon Mũi tên (▲ ▼) là cột cho phép thao tác nhấp chuột để Sort.
  */
 export function EmployeeTable({ employees, sortConfig, onSort }: EmployeeTableProps) {

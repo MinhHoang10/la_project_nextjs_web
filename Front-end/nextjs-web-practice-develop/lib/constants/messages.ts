@@ -1,5 +1,5 @@
 /**
- * Từ điển các thông báo lỗi (Error Messages Dictionary).
+ * Từ điển các thông báo lỗi.
  * Dùng cho Validate Zod trên Frontend và hiển thị Message từ Backend.
  */
 

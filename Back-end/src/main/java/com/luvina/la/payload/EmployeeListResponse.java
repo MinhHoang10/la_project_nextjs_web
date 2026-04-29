@@ -24,14 +24,12 @@ public class EmployeeListResponse implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Mã trạng thái phản hồi (Ví dụ: "200" cho thành công, "ERxxx" cho lỗi nghiệp
-     * vụ)
+     * Mã trạng thái phản hồi
      */
     private String code;
 
     /**
-     * Tổng số lượng bản ghi tìm thấy trong Database (dùng để tính toán phân trang ở
-     * UI)
+     * Tổng số lượng bản ghi tìm thấy trong Database
      */
     private Long totalRecords;
 
@@ -57,7 +55,7 @@ public class EmployeeListResponse implements Serializable {
         EmployeeListResponse response = new EmployeeListResponse();
         response.setCode(code);
         response.setMessage(message);
-        response.setParams(new ArrayList<>()); // Trả về mảng rỗng [] thay vì null để tránh lỗi Frontend
+        response.setParams(new ArrayList<>());
         return response;
     }
 }

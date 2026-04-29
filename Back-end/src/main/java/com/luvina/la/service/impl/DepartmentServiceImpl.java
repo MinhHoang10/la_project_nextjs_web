@@ -32,6 +32,6 @@ public class DepartmentServiceImpl implements DepartmentService {
      */
     @Override
     public List<DepartmentDTO> getAllDepartments() {
-        return DepartmentMapper.MAPPER.toDtoList(departmentRepository.findAll());
+        return DepartmentMapper.MAPPER.toDtoList(departmentRepository.findAllByOrderByDepartmentIdAsc());
     }
 }

@@ -1,6 +1,5 @@
 /**
  * Định nghĩa toàn bộ nhãn hiển thị (Labels) tiếng Nhật dùng chung cho hệ thống.
- * Đảm bảo đồng bộ với AppConstants.java ở Backend.
  */
 export const LABELS = {
   EMPLOYEE: {
@@ -23,3 +22,25 @@ export const LABELS = {
     ITEM: '項目',
   }
 } as const;
+
+/**
+ * Hàm chuyển đổi nhãn tiếng Nhật (trả về từ Backend) sang tên trường của form.
+ */
+export const mapLabelToField = (label: string): keyof import('@/types/employee').FieldErrors | null => {
+  switch (label) {
+    case 'アカウント名': return 'employeeLoginId';
+    case 'グループ': return 'departmentId';
+    case '氏名': return 'employeeName';
+    case 'カタカナ氏名': return 'employeeNameKana';
+    case '生年月日': return 'employeeBirthDate';
+    case 'メールアドレス': return 'employeeEmail';
+    case '電話番号': return 'employeeTelephone';
+    case 'パスワード': return 'employeeLoginPassword';
+    case 'パスワード（確認）': return 'employeeLoginPasswordConfirm';
+    case '資格': return 'certificationId';
+    case '資格交付日': return 'certificationStartDate';
+    case '失効日': return 'certificationEndDate';
+    case '点数': return 'certificationScore';
+    default: return null;
+  }
+};

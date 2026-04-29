@@ -2,6 +2,8 @@
  * Copyright(C) 2026 Luvina Software Company
  * EmployeeSearchForm.tsx, 4/13/2026 NguyenHuyHoang
  */
+'use client';
+
 import React from 'react';
 import { DepartmentDTO } from '@/types/department';
 import { useRouter } from 'next/navigation';
@@ -9,7 +11,7 @@ import { getEmployeeLabel } from '@/lib/validation/employee';
 import { QUERY_PARAMS, APP_MODES } from '@/lib/constants/common';
 
 /**
- * Các tham số (Props) truyền từ trang List xuống cho Component Tìm kiếm.
+ * Các tham số truyền từ trang List xuống cho Component Tìm kiếm.
  */
 interface EmployeeSearchFormProps {
   searchName: string;
@@ -21,7 +23,7 @@ interface EmployeeSearchFormProps {
 }
 
 /**
- * Component Khối ô nhập liệu tìm kiếm ở nửa trên màn hình danh sách.
+ * Component Khối ô nhập liệu tìm kiếm.
  * Bao gồm Nút Tìm kiếm và Nút Chuyển trang Thêm Mới.
  */
 export function EmployeeSearchForm({
