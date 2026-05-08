@@ -66,6 +66,14 @@ export interface EmployeeDetailResponse {
 }
 
 /**
+ * Wrapper response từ API GET /employee/{id} sau khi bọc trong EmployeeResponse
+ */
+export interface EmployeeDetailApiResponse {
+  code: string;
+  detail: EmployeeDetailResponse;
+}
+
+/**
  * Lớp cấu trúc trả về chuẩn cho API danh sách nhân viên từ Backend
  */
 export interface EmployeeListResponse {

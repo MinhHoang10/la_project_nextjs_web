@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import EmployeeListPage from '@/app/(protected)/employees/adm002/page';
-import EmployeeEditPage from '@/app/(protected)/employees/adm003/page';
+import EmployeeEditPage from '@/app/(protected)/employees/adm003/[id]/page';
 import EmployeeDetailPage from '@/app/(protected)/employees/adm006/page';
 import EmployeeConfirmPage from '@/app/(protected)/employees/adm004/page';
 import EmployeeCompletePage from '@/app/(protected)/employees/adm005/page';
@@ -13,6 +13,9 @@ jest.mock('next/navigation', () => ({
     push: jest.fn(),
   }),
   usePathname: () => '/', // Mock pathname for layout test
+  useParams: () => ({ id: '1' }), // Mock params for detail/edit pages
+  useSearchParams: () => ({ get: () => null }), // Mock searchParams
+  redirect: jest.fn(),
 }));
 
 

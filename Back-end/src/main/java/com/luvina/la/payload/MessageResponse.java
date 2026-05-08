@@ -21,4 +21,15 @@ import java.util.List;
 public class MessageResponse {
     private String code;
     private List<Object> params;
+
+    /**
+     * Tạo MessageResponse từ mã lỗi và danh sách tham số.
+     * 
+     * @param code   Mã lỗi
+     * @param params Các tham số bổ sung cho thông điệp
+     * @return Đối tượng MessageResponse
+     */
+    public static MessageResponse buildMessage(String code, Object... params) {
+        return new MessageResponse(code, java.util.List.of(params));
+    }
 }

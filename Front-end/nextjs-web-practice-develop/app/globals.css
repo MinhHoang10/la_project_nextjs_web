@@ -961,3 +961,17 @@ select {
 .form-control.is-invalid {
   border-color: #c00;
 }
+
+/* Truncate text with ellipsis and show full on hover using title attribute */
+.text-truncate-custom {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+}
+
+/* Ensure table cells allow truncation by setting min-width: 0 on grid items */
+.css-grid-table-body > div > div {
+  min-width: 0;
+}

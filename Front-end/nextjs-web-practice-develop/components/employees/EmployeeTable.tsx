@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { EmployeeDTO } from '@/types/employee';
 import { getEmployeeLabel } from '@/lib/validation/employee';
 
+import { INFO_MESSAGES } from '@/lib/constants/messages';
+
 /**
  * Cấu hình tham số đánh dấu Cột nào đang được Sort (Tăng/Giảm dần).
  */
@@ -61,19 +63,19 @@ export function EmployeeTable({ employees, sortConfig, onSort }: EmployeeTablePr
               <div className="bor-l-none text-center">
                 <Link href={`/employees/adm003/${emp.employeeId}`}>{emp.employeeId}</Link>
               </div>
-              <div>{emp.employeeName}</div>
+              <div className="text-truncate-custom" title={emp.employeeName}>{emp.employeeName}</div>
               <div>{emp.employeeBirthDate?.replaceAll('-', '/')}</div>
-              <div>{emp.departmentName}</div>
-              <div>{emp.employeeEmail}</div>
+              <div className="text-truncate-custom" title={emp.departmentName}>{emp.departmentName}</div>
+              <div className="text-truncate-custom" title={emp.employeeEmail}>{emp.employeeEmail}</div>
               <div>{emp.employeeTelephone}</div>
-              <div>{emp.certificationName || ''}</div>
+              <div className="text-truncate-custom" title={emp.certificationName || ''}>{emp.certificationName || ''}</div>
               <div>{emp.certificationEndDate?.replaceAll('-', '/')}</div>
               <div>{emp.certificationScore}</div>
             </div>
           ))
         ) : (
           <div className="text-center p-3" style={{ gridColumn: 'span 9' }}>
-            データが見つかりませんでした。
+            {INFO_MESSAGES.MSG005}
           </div>
         )}
       </div>

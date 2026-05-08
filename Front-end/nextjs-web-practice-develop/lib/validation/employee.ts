@@ -1,37 +1,42 @@
+/**
+ * Copyright(C) 2026 Luvina Software Company
+ * employee.ts, 5/4/2026 NguyenHuyHoang
+ */
 import { z } from 'zod';
 import { ERROR_MESSAGES } from '../constants/messages';
 import { LABELS } from '../constants/labels';
+import { EmployeeFormDTO } from '@/types/employee';
 
-// Lấy từ điển làm mặc định 
-const err = ERROR_MESSAGES;
-const L = LABELS.EMPLOYEE;
+// Alias rõ nghĩa cho từ điển lỗi và nhãn nhân viên
+const errorMessages = ERROR_MESSAGES;
+const labelEmployee = LABELS.EMPLOYEE;
 
 // Mẫu tra cứu
-const kanaRegex = /^[ァ-ンヴー]+$/; // Chỉ ký tự Katakana (Nhật)
+const kanaRegex = /^[ｦ-ﾟ]+$/; // Chỉ ký tự Katakana half-size (Nhật)
 const accountRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/; // Không có số ở đầu, chỉ chấp nhận a-z, A-Z, 0-9, _
-const halfSizeNumberRegex = /^[0-9]+$/; // Chữ số Halfsize
+const halfSizeNumberRegex = /^[\x00-\x7F]+$/; // Ký tự Halfsize
 
 export const employeeSchema = z.object({
   employeeLoginId: z.string()
-    .min(1, err.ER001(L.LOGIN_ID))
-    .max(50, err.ER006(L.LOGIN_ID, 50))
-    .regex(accountRegex, err.ER019())
-    .describe(L.LOGIN_ID),
+    .min(1, errorMessages.ER001(labelEmployee.LOGIN_ID))
+    .max(50, errorMessages.ER006(labelEmployee.LOGIN_ID, 50))
+    .regex(accountRegex, errorMessages.ER019())
+    .describe(labelEmployee.LOGIN_ID),
 
   employeeName: z.string()
-    .min(1, err.ER001(L.NAME))
-    .max(125, err.ER006(L.NAME, 125))
-    .describe(L.NAME),
+    .min(1, errorMessages.ER001(labelEmployee.NAME))
+    .max(125, errorMessages.ER006(labelEmployee.NAME, 125))
+    .describe(labelEmployee.NAME),
 
   employeeNameKana: z.string()
-    .min(1, err.ER001(L.NAME_KANA))
-    .max(125, err.ER006(L.NAME_KANA, 125))
-    .regex(kanaRegex, err.ER009(L.NAME_KANA))
-    .describe(L.NAME_KANA),
+    .min(1, errorMessages.ER001(labelEmployee.NAME_KANA))
+    .max(125, errorMessages.ER006(labelEmployee.NAME_KANA, 125))
+    .regex(kanaRegex, errorMessages.ER009(labelEmployee.NAME_KANA))
+    .describe(labelEmployee.NAME_KANA),
 
   employeeBirthDate: z.string()
-    .min(1, err.ER001(L.BIRTH_DATE))
-    .regex(/^\d{4}\/\d{2}\/\d{2}$/, err.ER005(L.BIRTH_DATE, 'yyyy/MM/dd'))
+    .min(1, errorMessages.ER001(labelEmployee.BIRTH_DATE))
+    .regex(/^\d{4}\/\d{2}\/\d{2}$/, errorMessages.ER005(labelEmployee.BIRTH_DATE, 'yyyy/MM/dd'))
     .refine((val) => {
       if (!/^\d{4}\/\d{2}\/\d{2}$/.test(val)) return true;
       const parts = val.split('/');
@@ -40,94 +45,105 @@ export const employeeSchema = z.object({
       const d = parseInt(parts[2], 10);
       const date = new Date(y, m - 1, d);
       return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
-    }, err.ER011(L.BIRTH_DATE))
-    .describe(L.BIRTH_DATE),
+    }, errorMessages.ER011(labelEmployee.BIRTH_DATE))
+    .describe(labelEmployee.BIRTH_DATE),
 
   employeeEmail: z.string()
-    .min(1, err.ER001(L.EMAIL))
-    .max(125, err.ER006(L.EMAIL, 125))
-    .email(err.ER005(L.EMAIL, 'メール'))
-    .describe(L.EMAIL),
+    .min(1, errorMessages.ER001(labelEmployee.EMAIL))
+    .max(125, errorMessages.ER006(labelEmployee.EMAIL, 125))
+    .email(errorMessages.ER005(labelEmployee.EMAIL, 'メール'))
+    .describe(labelEmployee.EMAIL),
 
   employeeTelephone: z.string()
-    .min(1, err.ER001(L.TELEPHONE))
-    .max(50, err.ER006(L.TELEPHONE, 50))
-    .regex(halfSizeNumberRegex, err.ER018(L.TELEPHONE))
-    .describe(L.TELEPHONE),
+    .min(1, errorMessages.ER001(labelEmployee.TELEPHONE))
+    .max(50, errorMessages.ER006(labelEmployee.TELEPHONE, 50))
+    .regex(halfSizeNumberRegex, errorMessages.ER018(labelEmployee.TELEPHONE))
+    .describe(labelEmployee.TELEPHONE),
 
-  departmentId: z.number().min(1, err.ER002(L.DEPARTMENT))
-    .describe(L.DEPARTMENT),
+  departmentId: z.coerce.number({
+    // Zod v4: dùng 'error' thay vì 'invalid_type_error' (Zod v3)
+    // Khi chưa chọn phòng ban (undefined → NaN), hiển thị đúng ER001
+    error: errorMessages.ER001(labelEmployee.DEPARTMENT)
+  }).min(1, errorMessages.ER001(labelEmployee.DEPARTMENT))
+    .describe(labelEmployee.DEPARTMENT),
 
   employeeLoginPassword: z.string()
-    .min(8, err.ER007(L.PASSWORD, 8, 50))
-    .max(50, err.ER007(L.PASSWORD, 8, 50))
+    .min(8, errorMessages.ER007(labelEmployee.PASSWORD, 8, 50))
+    .max(50, errorMessages.ER007(labelEmployee.PASSWORD, 8, 50))
     .optional()
     .or(z.literal(''))
-    .describe(L.PASSWORD),
+    .describe(labelEmployee.PASSWORD),
 
   employeeLoginPasswordConfirm: z.string()
     .optional()
     .or(z.literal(''))
-    .describe(L.PASSWORD_CONFIRM),
+    .describe(labelEmployee.PASSWORD_CONFIRM),
 
-  certificationId: z.coerce.number().optional().nullable().describe(L.CERTIFICATION),
-  certificationStartDate: z.string().optional().or(z.literal('')).describe(L.CERT_START_DATE),
-  certificationEndDate: z.string().optional().or(z.literal('')).describe(L.CERT_END_DATE),
-  certificationScore: z.string().optional().or(z.literal('')).describe(L.CERT_SCORE),
+  certificationId: z.coerce.number().optional().nullable().describe(labelEmployee.CERTIFICATION),
+  certificationStartDate: z.string().optional().or(z.literal('')).describe(labelEmployee.CERT_START_DATE),
+  certificationEndDate: z.string().optional().or(z.literal('')).describe(labelEmployee.CERT_END_DATE),
+  certificationScore: z.string().optional().or(z.literal('')).describe(labelEmployee.CERT_SCORE),
 
 }).superRefine((data, ctx) => {
-  // Validate Password Confirm 
+  // Validate Password Confirm
   if (data.employeeLoginPassword && data.employeeLoginPassword !== data.employeeLoginPasswordConfirm) {
     ctx.addIssue({
       code: "custom",
       path: ['employeeLoginPasswordConfirm'],
-      message: err.ER017()
+      message: errorMessages.ER017()
     });
   }
 
   // Nếu người dùng chọn 1 Chứng chỉ bất kỳ, phải nhập validate Ngày tháng và Điểm
   if (data.certificationId && data.certificationId > 0) {
     if (!data.certificationStartDate) {
-      ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: err.ER001(L.CERT_START_DATE) });
+      ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: errorMessages.ER001(labelEmployee.CERT_START_DATE) });
     } else {
       if (!/^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationStartDate)) {
-        ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: err.ER005(L.CERT_START_DATE, 'yyyy/MM/dd') });
+        ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: errorMessages.ER005(labelEmployee.CERT_START_DATE, 'yyyy/MM/dd') });
       } else {
         const parts = data.certificationStartDate.split('/');
         const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
         if (date.getFullYear() !== parseInt(parts[0], 10) || date.getMonth() !== parseInt(parts[1], 10) - 1 || date.getDate() !== parseInt(parts[2], 10)) {
-          ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: err.ER011(L.CERT_START_DATE) });
+          ctx.addIssue({ code: "custom", path: ['certificationStartDate'], message: errorMessages.ER011(labelEmployee.CERT_START_DATE) });
         }
       }
     }
 
     if (!data.certificationEndDate) {
-      ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: err.ER001(L.CERT_END_DATE) });
+      ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: errorMessages.ER001(labelEmployee.CERT_END_DATE) });
     } else {
       if (!/^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationEndDate)) {
-        ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: err.ER005(L.CERT_END_DATE, 'yyyy/MM/dd') });
+        ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: errorMessages.ER005(labelEmployee.CERT_END_DATE, 'yyyy/MM/dd') });
       } else {
         const parts = data.certificationEndDate.split('/');
         const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
         if (date.getFullYear() !== parseInt(parts[0], 10) || date.getMonth() !== parseInt(parts[1], 10) - 1 || date.getDate() !== parseInt(parts[2], 10)) {
-          ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: err.ER011(L.CERT_END_DATE) });
+          ctx.addIssue({ code: "custom", path: ['certificationEndDate'], message: errorMessages.ER011(labelEmployee.CERT_END_DATE) });
         }
       }
     }
 
     if (!data.certificationScore) {
-      ctx.addIssue({ code: "custom", path: ['certificationScore'], message: err.ER001(L.CERT_SCORE) });
+      ctx.addIssue({ code: "custom", path: ['certificationScore'], message: errorMessages.ER001(labelEmployee.CERT_SCORE) });
+    } else if (!/^[0-9]+$/.test(data.certificationScore)) {
+      ctx.addIssue({ code: "custom", path: ['certificationScore'], message: errorMessages.ER018(labelEmployee.CERT_SCORE) });
     }
 
-    // Check ngày hết hạn phải sau ngày cấp chứng chỉ (ER012)
-    if (data.certificationStartDate && data.certificationEndDate && /^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationStartDate) && /^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationEndDate)) {
+    // Kiểm tra ngày hết hạn phải sau ngày cấp chứng chỉ (ER012)
+    if (
+      data.certificationStartDate &&
+      data.certificationEndDate &&
+      /^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationStartDate) &&
+      /^\d{4}\/\d{2}\/\d{2}$/.test(data.certificationEndDate)
+    ) {
       const start = new Date(data.certificationStartDate);
       const end = new Date(data.certificationEndDate);
       if (end < start) {
         ctx.addIssue({
           code: "custom",
           path: ['certificationEndDate'],
-          message: err.ER012(L.CERT_END_DATE, L.CERT_START_DATE)
+          message: errorMessages.ER012(labelEmployee.CERT_END_DATE, labelEmployee.CERT_START_DATE)
         });
       }
     }
@@ -137,11 +153,15 @@ export const employeeSchema = z.object({
 // Mapping bổ sung cho các trường không có trong schema chính
 const ADDITIONAL_LABELS: Record<string, string> = {
   employeeId: '会員ID',
-  certificationName: L.CERT_NAME,
+  certificationName: labelEmployee.CERT_NAME,
 };
 
 /**
- * Trích xuất label từ Zod schema bằng .description
+ * Trích xuất nhãn hiển thị của một trường từ Zod schema thông qua thuộc tính .description.
+ * Dự phòng bằng ADDITIONAL_LABELS nếu trường không có trong schema chính.
+ *
+ * @param field - Tên trường cần lấy nhãn
+ * @return Nhãn hiển thị tiếng Nhật tương ứng, hoặc chính tên trường nếu không tìm thấy
  */
 export const getEmployeeLabel = (field: string): string => {
   const schemaField = employeeSchema.shape[field as keyof typeof employeeSchema.shape];
@@ -152,8 +172,6 @@ export const getEmployeeLabel = (field: string): string => {
 };
 
 export type EmployeeForm = z.infer<typeof employeeSchema>;
-
-import { EmployeeFormDTO } from '@/types/employee';
 
 /** Giới hạn ký tự tối đa cho thông báo lỗi ER006/ER007 */
 const FIELD_MAX_LENGTHS: Partial<Record<keyof EmployeeFormDTO, number>> = {
@@ -167,7 +185,12 @@ const FIELD_MAX_LENGTHS: Partial<Record<keyof EmployeeFormDTO, number>> = {
 };
 
 /**
- * Trả về thông báo lỗi dễ đọc từ mã lỗi và khóa trường.
+ * Hàm trợ giúp để chuyển đổi mã lỗi từ backend (VD: ER003, ER013...) thành các thông báo lỗi thân thiện với người dùng.
+ *
+ * @param errorCode - Mã lỗi backend (String) - Ví dụ: "ER001", "ER003", "ER012"
+ * @param fieldKey  - Khóa của trường form bị lỗi (keyof EmployeeFormDTO) - Ví dụ: "employeeLoginId", "certificationEndDate"
+ * @returns Chuỗi thông báo lỗi tiếng Nhật đã được định dạng, sẵn sàng để hiển thị trên UI.
+ *          Sử dụng getEmployeeLabel để đảm bảo nhãn hiển thị thống nhất.
  */
 export function resolveErrorMessage(
   errorCode: string,

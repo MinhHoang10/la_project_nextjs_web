@@ -10,81 +10,116 @@ import { DepartmentDTO } from '@/types/department';
 import { SortConfig } from '@/components/employees/EmployeeTable';
 import { useRouter } from 'next/navigation';
 import { storage } from '@/lib/utils/storage';
+import { API_STATUS_CODES } from '@/lib/constants/common';
 
 /**
- * Hook xử lý State và Logic cho trang Danh sách nhân viên (ADM002).
- * Giúp tách biệt logic gọi API và quản lý state ra khỏi giao diện (UI).
+ * Hook xử lý State và Logic cho màn hình Danh sách nhân viên (ADM002).
+ * 
+ * Các chức năng chính:
+ * - Tìm kiếm theo tên và phòng ban.
+ * - Sắp xếp đa cột (Multi-sort).
+ * - Phân trang (Pagination).
+ * - Duy trì trạng thái tìm kiếm qua Session Storage.
+ * 
+ * @returns Các biến trạng thái và hàm xử lý cho màn hình ADM002.
  */
 export function useADM002() {
   const router = useRouter();
-  // Dữ liệu hiển thị trên giao diện
+  
+  // Danh sách nhân viên và phòng ban lấy từ API
   const [employees, setEmployees] = useState<EmployeeDTO[]>([]);
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
 
-  // Bộ lọc tìm kiếm
+  // State quản lý tiêu chí tìm kiếm người dùng nhập vào
   const [searchName, setSearchName] = useState('');
   const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined);
+  
+  // Trạng thái hiển thị vòng xoay chờ khi gọi API
   const [loading, setLoading] = useState(true);
+  
+  // Số lượng bản ghi hiển thị trên mỗi trang
   const [pageSize, setPageSize] = useState(20);
 
-  // Cấu hình thứ tự sắp xếp mặc định (Ưu tiên: Tên NV > Tên Chứng chỉ > Ngày hết hạn)
+  /**
+   * Cấu hình thứ tự sắp xếp mặc định theo yêu cầu thiết kế.
+   * Ưu tiên: Tên nhân viên (ASC) > Tên Chứng chỉ (ASC) > Ngày hết hạn (ASC).
+   */
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     employeeName: 'asc',
     certificationName: 'asc',
     certificationEndDate: 'asc'
   });
 
-  // Trạng thái Phân trang (Pagination)
-  const [currentPage, setCurrentPage] = useState(0); // Chỉ số 0 dành cho Spring Data JPA Backend
+  // Trạng thái quản lý phân trang
+  const [currentPage, setCurrentPage] = useState(0); // Bắt đầu từ 0 theo chuẩn Spring Data JPA
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  // Lấy dữ liệu lần đầu khi vào trang
+  /** 
+   * Effect: Khởi tạo dữ liệu khi lần đầu truy cập trang.
+   * 
+   * 1. Khôi phục điều kiện tìm kiếm từ Session Storage (nếu có).
+   * 2. Tải danh sách phòng ban cho Dropdown.
+   * 3. Thực hiện lần tìm kiếm đầu tiên.
+   */
   useEffect(() => {
     const initData = async () => {
       try {
-        // Lấy lại dữ liệu tìm kiếm từ Session Storage (ví dụ khi từ trang khác quay lại)
+        // Đọc dữ liệu từ Session Storage để người dùng quay lại vẫn thấy kết quả cũ
         const storedName = storage.session.get<string>('adm002_searchName') || '';
         const storedDeptId = storage.session.get<string>('adm002_selectedDeptId');
         const parsedDeptId = storedDeptId ? Number(storedDeptId) : undefined;
 
-        // Cập nhật lại giao diện
+        // Đồng bộ hóa State với dữ liệu vừa khôi phục
         setSearchName(storedName);
         if (parsedDeptId) setSelectedDeptId(parsedDeptId);
 
+        // Tải danh sách phòng ban để hiển thị trong ô lọc
         const deptData = await departmentApi.getAllDepartments();
         setDepartments(deptData);
 
-        // Gọi API ngay lập tức bằng các tham số cũ vừa lấy ở trên
-        await fetchEmployees(0, storedName, parsedDeptId); 
+        // Kích hoạt tìm kiếm nhân viên lần đầu (Trang 0)
+        await fetchEmployees(0, storedName, parsedDeptId);
       } catch (error) {
+        // Chuyển hướng sang trang lỗi nếu API Master Data thất bại
         router.push('/employees/system_error');
       } finally {
         setLoading(false);
       }
     };
     initData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageSize, sortConfig]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize, sortConfig]); // Tải lại khi thay đổi kích thước trang hoặc cấu hình sort
 
   /**
-   * Hàm gọi API để lấy danh sách nhân viên.
-   * Chuyển đổi định dạng sắp xếp từ Client sang định dạng mà backend hỗ trợ.
+   * Hàm cốt lõi để gọi API lấy danh sách nhân viên.
+   * 
+   * @param page Chỉ số trang cần lấy.
+   * @param name Tên nhân viên (tùy chọn).
+   * @param deptId ID phòng ban (tùy chọn).
+   * @param size Kích thước trang (tùy chọn).
    */
   const fetchEmployees = async (page: number, name?: string, deptId?: number, size?: number) => {
     setLoading(true);
     try {
-      // Map multi-sort keys sang JPA Model Paths
+      /**
+       * Ánh xạ (Map) các cột Sort trên giao diện sang các thuộc tính 
+       * (Property path) tương ứng trong Model ở Backend.
+       */
       const sort = [
         `employeeName,${sortConfig.employeeName}`,
         `employeesCertifications.certification.certificationName,${sortConfig.certificationName}`,
         `employeesCertifications.endDate,${sortConfig.certificationEndDate}`
       ];
 
+      // Xác định giá trị tìm kiếm cuối cùng (Ưu tiên tham số truyền vào hơn state hiện tại)
       const actualName = name !== undefined ? name : searchName;
       const actualDeptId = deptId !== undefined ? deptId : selectedDeptId;
 
-      // Lưu điều kiện tìm kiếm vào bộ nhớ tạm để giữ lại khi sang trang khác
+      /**
+       * Lưu trữ điều kiện tìm kiếm hiện tại vào Session Storage.
+       * Điều này cho phép "nhớ" trạng thái tìm kiếm khi người dùng điều hướng.
+       */
       storage.session.set('adm002_searchName', actualName);
       if (actualDeptId !== undefined) {
         storage.session.set('adm002_selectedDeptId', String(actualDeptId));
@@ -92,6 +127,7 @@ export function useADM002() {
         storage.session.remove('adm002_selectedDeptId');
       }
 
+      // Thực hiện gọi API lấy danh sách nhân viên có phân trang và sắp xếp
       const data = await employeeApi.getAllEmployees({
         name: actualName,
         departmentId: actualDeptId,
@@ -100,18 +136,22 @@ export function useADM002() {
         sort: sort
       });
 
-      if (data.code === '200') {
+      // Xử lý kết quả trả về từ Backend dựa trên mã thành công
+      if (data.code === API_STATUS_CODES.SUCCESS) {
         setEmployees(data.employees || []);
+        // Tính toán tổng số trang dựa trên tổng số bản ghi và kích thước trang
         setTotalPages(Math.ceil((data.totalRecords || 0) / (size || pageSize)));
         setTotalElements(data.totalRecords || 0);
         setCurrentPage(page);
       } else {
+        // Reset dữ liệu nếu API trả về mã không thành công
         setEmployees([]);
         setTotalPages(0);
         setTotalElements(0);
         setCurrentPage(0);
       }
     } catch (error) {
+      // Điều hướng sang trang lỗi hệ thống nếu xảy ra lỗi mạng hoặc lỗi server (500)
       router.push('/employees/system_error');
     } finally {
       setLoading(false);
@@ -119,24 +159,30 @@ export function useADM002() {
   };
 
   /**
-   * Phương thức click nút Tìm Kiếm.
+   * Xử lý khi người dùng nhấn nút Tìm Kiếm hoặc nhấn Enter trong form.
    */
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // Luôn quay lại trang đầu tiên (index 0) khi thực hiện tìm kiếm mới
     fetchEmployees(0, searchName.trim(), selectedDeptId);
   };
 
   /**
-   * Phương thức nhảy trang, load trang tiếp theo hoặc lùi trang trước đó.
+   * Xử lý khi người dùng nhấn chuyển số trang trên thanh phân trang.
+   * 
+   * @param page Chỉ số trang mới.
    */
   const handlePageChange = (page: number) => {
+    // Đảm bảo chỉ số trang nằm trong phạm vi hợp lệ
     if (page >= 0 && page < totalPages) {
       fetchEmployees(page);
     }
   };
 
   /**
-   * Hàm đổi chiều sắp xếp (từ Tăng dần sang Giảm dần và ngược lại) khi click vào tiêu đề cột.
+   * Xử lý đảo chiều sắp xếp (asc <-> desc) cho một cột cụ thể.
+   * 
+   * @param field Tên cột cần sắp xếp.
    */
   const handleSort = (field: keyof SortConfig) => {
     setSortConfig(prev => ({
@@ -146,7 +192,7 @@ export function useADM002() {
   };
 
   return {
-    // Các biến dùng cho giao diện (States)
+    // Trạng thái dữ liệu (States)
     employees,
     departments,
     loading,
@@ -158,7 +204,7 @@ export function useADM002() {
     currentPage,
     totalPages,
     totalElements,
-    // Các hàm xử lý sự kiện (Actions)
+    // Các hàm hành động (Actions)
     handleSearch,
     handlePageChange,
     handleSort

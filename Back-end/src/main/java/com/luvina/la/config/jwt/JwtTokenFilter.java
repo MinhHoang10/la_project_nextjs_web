@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
 /**
  * Bộ lọc tùy chỉnh chặn lại các Request được thực thi mỗi lần gọi API.
@@ -40,9 +41,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
      * Phương thức xử lý luồng lọc request/response bên trong Servlet pipeline.
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain) throws IOException, ServletException {
 
         try {
             String jwt = this.getJwtFromRequest(request);

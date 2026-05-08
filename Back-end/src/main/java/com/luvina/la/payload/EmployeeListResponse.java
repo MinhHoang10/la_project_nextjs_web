@@ -6,7 +6,6 @@ package com.luvina.la.payload;
 
 import com.luvina.la.dto.EmployeeDTO;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 
@@ -55,7 +54,6 @@ public class EmployeeListResponse implements Serializable {
         EmployeeListResponse response = new EmployeeListResponse();
         response.setCode(code);
         response.setMessage(message);
-        response.setParams(new ArrayList<>());
         return response;
     }
 }

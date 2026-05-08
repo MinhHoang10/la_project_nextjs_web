@@ -2,22 +2,27 @@
 
 
 describe('API Interceptor Logic', () => {
-  // Mock sessionStorage
+  // Mock localStorage
   const mockStorage: Record<string, string> = {};
-  const sessionStorageMock = {
-    getItem: jest.fn((key: string) => mockStorage[key] || null),
+  const localStorageMock = {
+    getItem: jest.fn((key: string) => {
+      // Mock storage.local.get behaviour which does JSON.parse
+      return mockStorage[key] ? JSON.parse(mockStorage[key]) : null;
+    }),
     setItem: jest.fn((key: string, value: string) => { mockStorage[key] = value; }),
     removeItem: jest.fn((key: string) => { delete mockStorage[key]; }),
     clear: jest.fn(() => { Object.keys(mockStorage).forEach(key => delete mockStorage[key]); }),
   };
-  Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
   // Mock navigation function
   const mockNavigate = jest.fn(); 
 
   // Logic copied from the request interceptor, but using our mock storage
   const requestInterceptorLogic = (config: { headers?: { Authorization?: string } }) => {
-    const token = window.sessionStorage.getItem('access_token');
+    // In actual implementation it uses storage.local.get which parses JSON, but for this test we'll just read from our mock
+    // storage.local sets strings as JSON strings (e.g. '"test-token"')
+    const token = window.localStorage.getItem('access_token');
     if (token) {
       if (config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -29,8 +34,8 @@ describe('API Interceptor Logic', () => {
   // Logic copied from the response interceptor, but using our mock storage and navigation
   const responseInterceptorErrorLogic = (error: { response?: { status?: number } }) => {
     if (error.response?.status === 401) {
-      window.sessionStorage.removeItem('access_token');
-      window.sessionStorage.removeItem('token_type');
+      window.localStorage.removeItem('access_token');
+      window.localStorage.removeItem('token_type');
       mockNavigate('/login'); // Use mock instead of window.location.href
     }
     return Promise.reject(error);
@@ -38,12 +43,12 @@ describe('API Interceptor Logic', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    window.sessionStorage.clear();
+    window.localStorage.clear();
   });
 
   describe('Request Interceptor Logic', () => {
     it('should add Authorization header if token exists', () => {
-      window.sessionStorage.setItem('access_token', 'test-token');
+      window.localStorage.setItem('access_token', '"test-token"');
       const config = { headers: {} };
       const newConfig = requestInterceptorLogic(config);
       expect(newConfig.headers?.Authorization).toBe('Bearer test-token');
@@ -59,21 +64,21 @@ describe('API Interceptor Logic', () => {
   describe('Response Interceptor Logic', () => {
     it('should clear token and navigate on 401 error', async () => {
       const error = { response: { status: 401 } };
-      window.sessionStorage.setItem('access_token', 'test-token');
+      window.localStorage.setItem('access_token', '"test-token"');
       
       await expect(responseInterceptorErrorLogic(error)).rejects.toEqual(error);
 
-      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('access_token');
+      expect(window.localStorage.removeItem).toHaveBeenCalledWith('access_token');
       expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
 
     it('should not navigate or clear token on other errors', async () => {
         const error = { response: { status: 500 } };
-        window.sessionStorage.setItem('access_token', 'test-token');
+        window.localStorage.setItem('access_token', '"test-token"');
 
         await expect(responseInterceptorErrorLogic(error)).rejects.toEqual(error);
   
-        expect(window.sessionStorage.removeItem).not.toHaveBeenCalled();
+        expect(window.localStorage.removeItem).not.toHaveBeenCalled();
         expect(mockNavigate).not.toHaveBeenCalled();
       });
   });

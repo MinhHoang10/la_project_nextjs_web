@@ -12,7 +12,6 @@ import com.luvina.la.entity.EmployeesCertifications;
 import com.luvina.la.exception.LogicException;
 import com.luvina.la.payload.EmployeeDetailResponse;
 import com.luvina.la.payload.EmployeeRequest;
-import com.luvina.la.payload.EmployeeRequest.CertificationRequest;
 import com.luvina.la.repository.CertificationRepository;
 import com.luvina.la.repository.EmployeesCertificationsRepository;
 import com.luvina.la.repository.EmployeeRepository;
@@ -37,7 +36,7 @@ import java.util.List;
  * - Đếm số lượng nhân viên (ADM002)
  * - Lấy thông tin chi tiết nhân viên (ADM003)
  * - Thêm mới nhân viên (ADM004)
- * - Cập nhật thông tin nhân viên (ADM005) (Bổ sung sau)
+ * - Cập nhật thông tin nhân viên (ADM005)
  * 
  * @author Nguyen Huy Hoang
  */
@@ -148,6 +147,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public EmployeeDetailResponse getEmployeeDetailById(Long id) {
+        if (id == null)
+            return null;
         Employee employee = employeeRepository.findById(id).orElse(null);
         if (employee == null || employee.getEmployeeRole() != 0) {
             return null;
@@ -171,28 +172,31 @@ public class EmployeeServiceImpl implements EmployeeService {
         response.setEmployeeLoginId(employee.getEmployeeLoginId());
 
         // Lấy danh sách chứng chỉ và sắp xếp theo certificationLevel ASC
-        List<EmployeeDetailResponse.CertificationDetail> certDetails = new java.util.ArrayList<>();
+        List<EmployeeDetailResponse.CertificationDetail> certificationDetails = new java.util.ArrayList<>();
         if (employee.getEmployeesCertifications() != null && !employee.getEmployeesCertifications().isEmpty()) {
-            List<EmployeesCertifications> certs = new java.util.ArrayList<>(employee.getEmployeesCertifications());
-            certs.sort((a, b) -> Integer.compare(
+            List<EmployeesCertifications> certifications = new java.util.ArrayList<>(
+                    employee.getEmployeesCertifications());
+            certifications.sort((a, b) -> Integer.compare(
                     a.getCertification().getCertificationLevel(),
                     b.getCertification().getCertificationLevel()));
 
-            for (EmployeesCertifications employeeCertification : certs) {
-                EmployeeDetailResponse.CertificationDetail certDetail = new EmployeeDetailResponse.CertificationDetail();
-                certDetail.setCertificationId(employeeCertification.getCertification().getCertificationId());
-                certDetail.setCertificationName(employeeCertification.getCertification().getCertificationName());
-                certDetail.setStartDate(employeeCertification.getStartDate() != null
+            // Tạo danh sách chi tiết chứng chỉ và sắp xếp theo certificationLevel ASC
+            for (EmployeesCertifications employeeCertification : certifications) {
+                EmployeeDetailResponse.CertificationDetail certificationDetail = new EmployeeDetailResponse.CertificationDetail();
+                certificationDetail.setCertificationId(employeeCertification.getCertification().getCertificationId());
+                certificationDetail
+                        .setCertificationName(employeeCertification.getCertification().getCertificationName());
+                certificationDetail.setStartDate(employeeCertification.getStartDate() != null
                         ? employeeCertification.getStartDate().format(dateFormatter)
                         : null);
-                certDetail.setEndDate(employeeCertification.getEndDate() != null
+                certificationDetail.setEndDate(employeeCertification.getEndDate() != null
                         ? employeeCertification.getEndDate().format(dateFormatter)
                         : null);
-                certDetail.setScore(employeeCertification.getScore());
-                certDetails.add(certDetail);
+                certificationDetail.setScore(employeeCertification.getScore());
+                certificationDetails.add(certificationDetail);
             }
         }
-        response.setCertifications(certDetails);
+        response.setCertifications(certificationDetails);
 
         return response;
     }
@@ -204,6 +208,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      * @return ID của nhân viên vừa được tạo
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long addEmployee(EmployeeRequest request) {
         Employee employee = new Employee();
         mapRequestToEmployee(request, employee);
@@ -212,12 +217,52 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setEmployeeLoginPassword(passwordEncoder.encode(request.getEmployeeLoginPassword()));
         employee.setEmployeeRole(0); // Vai trò mặc định cho nhân viên mới
 
-        Employee employeeInformation = employeeRepository.save(employee);
+        Employee inputEmployee = employeeRepository.save(employee);
 
         // Lưu danh sách chứng chỉ liên quan (nếu có)
-        saveCertifications(employeeInformation, request.getCertifications());
+        List<EmployeeRequest.CertificationRequest> certificationRequests = request.getCertifications();
+        if (certificationRequests != null && !certificationRequests.isEmpty()) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(AppConstants.DATE_FORMAT);
+            for (EmployeeRequest.CertificationRequest certificationRequest : certificationRequests) {
+                // Nếu không có certificationId thì bỏ qua
+                if (certificationRequest.getCertificationId() == null)
+                    continue;
 
-        return employeeInformation.getEmployeeId();
+                // Lấy thông tin chứng chỉ từ DB
+                Certification certification = certificationRepository
+                        .findById(Long.parseLong(certificationRequest.getCertificationId()))
+                        .orElseThrow(() -> new IllegalArgumentException("Chứng chỉ không tồn tại"));
+
+                // Tạo entity EmployeesCertifications
+                EmployeesCertifications employeesCertification = new EmployeesCertifications();
+                employeesCertification.setEmployee(inputEmployee);
+                employeesCertification.setCertification(certification);
+
+                // Xử lý ngày bắt đầu
+                if (certificationRequest.getCertificationStartDate() != null
+                        && !certificationRequest.getCertificationStartDate().isEmpty()) {
+                    employeesCertification
+                            .setStartDate(LocalDate.parse(certificationRequest.getCertificationStartDate(),
+                                    dateTimeFormatter));
+                }
+                // Xử lý ngày kết thúc
+                if (certificationRequest.getCertificationEndDate() != null
+                        && !certificationRequest.getCertificationEndDate().isEmpty()) {
+                    employeesCertification.setEndDate(LocalDate.parse(certificationRequest.getCertificationEndDate(),
+                            dateTimeFormatter));
+                }
+                // Xử lý điểm số
+                if (certificationRequest.getEmployeeCertificationScore() != null
+                        && !certificationRequest.getEmployeeCertificationScore().isEmpty()) {
+                    employeesCertification
+                            .setScore(new BigDecimal(certificationRequest.getEmployeeCertificationScore()));
+                }
+
+                employeesCertificationsRepository.save(employeesCertification);
+            }
+        }
+
+        return inputEmployee.getEmployeeId();
     }
 
     /**
@@ -226,31 +271,72 @@ public class EmployeeServiceImpl implements EmployeeService {
      * @param request Dữ liệu form từ client (đã qua bước validate)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void editEmployee(EmployeeRequest request) {
+        Long empId = request.getEmployeeId();
+        if (empId == null) {
+            throw new LogicException(AppConstants.ER013, java.util.Arrays.asList(" I D "));
+        }
+
         // Tìm nhân viên hiện tại
-        Employee employee = employeeRepository.findById(request.getEmployeeId())
+        Employee employee = employeeRepository.findById(empId)
                 .orElseThrow(() -> new LogicException(AppConstants.ER013, java.util.Arrays.asList(" I D ")));
 
         // Cập nhật thông tin cơ bản
         mapRequestToEmployee(request, employee);
 
-        // Xử lý mật khẩu (Chỉ cập nhật nếu có truyền lên)
-        String newPassword = request.getEmployeeLoginPassword();
-        if (newPassword != null && !newPassword.trim().isEmpty()) {
-            employee.setEmployeeLoginPassword(passwordEncoder.encode(newPassword));
-        }
-
         // Lưu thông tin nhân viên
-        Employee employeeInformation = employeeRepository.save(employee);
+        @SuppressWarnings("null")
+        Employee inputEmployee = employeeRepository.save(employee);
 
         // Xóa thông tin chứng chỉ hiện có
-        employeesCertificationsRepository.deleteByEmployee(employeeInformation);
+        employeesCertificationsRepository.deleteByEmployee(inputEmployee);
 
         // Thêm mới lại chứng chỉ (nếu có)
-        saveCertifications(employeeInformation, request.getCertifications());
+        List<EmployeeRequest.CertificationRequest> certificationRequests = request.getCertifications();
+        if (certificationRequests != null && !certificationRequests.isEmpty()) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(AppConstants.DATE_FORMAT);
+            for (EmployeeRequest.CertificationRequest certificationRequest : certificationRequests) {
+                // Nếu không có certificationId thì bỏ qua
+                if (certificationRequest.getCertificationId() == null)
+                    continue;
+
+                // Lấy thông tin chứng chỉ từ DB
+                Certification certification = certificationRepository
+                        .findById(Long.parseLong(certificationRequest.getCertificationId()))
+                        .orElseThrow(() -> new IllegalArgumentException("Chứng chỉ không tồn tại"));
+
+                // Tạo entity EmployeesCertifications
+                EmployeesCertifications employeesCertification = new EmployeesCertifications();
+                employeesCertification.setEmployee(inputEmployee);
+                employeesCertification.setCertification(certification);
+
+                // Xử lý ngày bắt đầu
+                if (certificationRequest.getCertificationStartDate() != null
+                        && !certificationRequest.getCertificationStartDate().isEmpty()) {
+                    employeesCertification
+                            .setStartDate(LocalDate.parse(certificationRequest.getCertificationStartDate(),
+                                    dateTimeFormatter));
+                }
+                // Xử lý ngày kết thúc
+                if (certificationRequest.getCertificationEndDate() != null
+                        && !certificationRequest.getCertificationEndDate().isEmpty()) {
+                    employeesCertification.setEndDate(LocalDate.parse(certificationRequest.getCertificationEndDate(),
+                            dateTimeFormatter));
+                }
+                // Xử lý điểm số
+                if (certificationRequest.getEmployeeCertificationScore() != null
+                        && !certificationRequest.getEmployeeCertificationScore().isEmpty()) {
+                    employeesCertification
+                            .setScore(new BigDecimal(certificationRequest.getEmployeeCertificationScore()));
+                }
+
+                employeesCertificationsRepository.save(employeesCertification);
+            }
+        }
     }
 
-    // ===== Các phương thức hỗ trợ nội bộ (Helper Methods) =====
+    // ===== Các phương thức hỗ trợ nội bộ =====
 
     /**
      * Xử lý ký tự đặc biệt trong từ khóa tìm kiếm để tránh SQL Injection/Logic
@@ -291,54 +377,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     /**
-     * Lưu trữ danh sách chứng chỉ ngoại ngữ của nhân viên.
-     *
-     * @param employee     Entity nhân viên cần cập nhật thông tin
-     * @param certRequests Danh sách chứng chỉ cần lưu
-     */
-    private void saveCertifications(Employee employee, List<EmployeeRequest.CertificationRequest> certRequests) {
-
-        // Nếu không có chứng chỉ thì return
-        if (certRequests == null || certRequests.isEmpty())
-            return;
-
-        // Format ngày tháng
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(AppConstants.DATE_FORMAT);
-
-        // Duyệt qua từng chứng chỉ và lưu vào DB
-        for (EmployeeRequest.CertificationRequest req : certRequests) {
-            // Nếu không có certificationId thì continue
-            if (req.getCertificationId() == null)
-                continue;
-
-            // Lấy thông tin chứng chỉ từ DB
-            Certification certification = certificationRepository.findById(Long.parseLong(req.getCertificationId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Chứng chỉ không tồn tại"));
-
-            // Tạo entity EmployeesCertifications
-            EmployeesCertifications employeesCertification = new EmployeesCertifications();
-            employeesCertification.setEmployee(employee);
-            employeesCertification.setCertification(certification);
-
-            // Xử lý ngày bắt đầu
-            if (req.getCertificationStartDate() != null && !req.getCertificationStartDate().isEmpty()) {
-                employeesCertification
-                        .setStartDate(LocalDate.parse(req.getCertificationStartDate(), dateTimeFormatter));
-            }
-            // Xử lý ngày kết thúc
-            if (req.getCertificationEndDate() != null && !req.getCertificationEndDate().isEmpty()) {
-                employeesCertification.setEndDate(LocalDate.parse(req.getCertificationEndDate(), dateTimeFormatter));
-            }
-            // Xử lý điểm số
-            if (req.getEmployeeCertificationScore() != null && !req.getEmployeeCertificationScore().isEmpty()) {
-                employeesCertification.setScore(new BigDecimal(req.getEmployeeCertificationScore()));
-            }
-
-            employeesCertificationsRepository.save(employeesCertification);
-        }
-    }
-
-    /**
      * Xóa bỏ thông tin nhân viên khỏi hệ thống (ADM003).
      *
      * @param id ID của nhân viên cần xóa
@@ -363,8 +401,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             // Xóa thông tin nhân viên
             employeeRepository.deleteById(id);
         } catch (Exception e) {
-            // Nếu có lỗi khi xóa thì trả về lỗi với mã lỗi ER015 và chuyển sang bước tạo
-            // response
+            // Nếu có lỗi khi xóa thì trả về lỗi với mã lỗi ER015
             throw new LogicException(AppConstants.ER015, java.util.Collections.emptyList());
         }
     }

@@ -2,8 +2,8 @@ import { storeToken, getToken, removeToken } from '@/lib/auth/token';
 
 describe('Token Utilities', () => {
   beforeEach(() => {
-    // Clear sessionStorage before each test
-    sessionStorage.clear();
+    // Clear localStorage before each test
+    localStorage.clear();
   });
 
   it('should store and retrieve the access token', () => {

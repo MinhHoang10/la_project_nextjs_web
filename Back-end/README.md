@@ -51,30 +51,31 @@ You can use "Postman" to run the test: `https://www.postman.com`
     
     Output: {"msg":"Token is valid"}
 
-## Source code structure
+## Cấu trúc mã nguồn
 #### Source code java
     /java
       /com.luvina.la
-        /config
-          /jwt
-        /controller
-        /dto (Contains DTO class, intermediate class that transfer data between payload and entity)
-        /entity (Contains entity class, attribute mapping with table)
-        /mapper
-        /payload (Contains Request/Response class)
-        /repository
-        /service
-          /impl
+        /config      : Cấu hình Security (JWT), CORS, và Database.
+        /controller  : Các API Endpoints (ví dụ: `EmployeeController`, `LoginController`).
+        /dto         : Data Transfer Objects.
+        /entity      : Database entities (mapping với `m_employee`, `m_department`, etc.).
+        /exception   : Xử lý lỗi toàn cục và các exception custom.
+        /mapper      : MapStruct interfaces để chuyển đổi DTO-Entity.
+        /payload     : Các models Request và Response của API.
+        /repository  : Các interface truy cập dữ liệu (Spring Data JPA).
+        /service     : Logic xử lý nghiệp vụ.
+        /validate    : Logic validate nghiệp vụ (ví dụ: `EmployeeValidate`).
+        /util        : Các class tiện ích.
 
-#### Resource file:
+#### Các file Tài nguyên:
     /resources
       /config
-        /application.yaml (common config file)
-        /application-dev.yaml (config file for development environment)
-        /application-prod.yaml (config file for production environment)
+        /application.yaml (file cấu hình chung)
+        /application-dev.yaml (file cấu hình cho môi trường phát triển)
+        /application-prod.yaml (file cấu hình cho môi trường production)
       /db
-        /migration (contains sql script files for migrate database: V<version>__<description>.sql)
-      /logback-spring.xml (config output log level for package)
+        /migration (chứa các file sql script để migrate database: V<version>__<description>.sql)
+      /logback-spring.xml (cấu hình mức độ log đầu ra cho từng package)
 
 ### Flyway database migration enable/disable
     spring

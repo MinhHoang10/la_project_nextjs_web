@@ -25,7 +25,7 @@ export function setupInterceptors(client: ReturnType<typeof axios.create>) {
   client.interceptors.request.use(
     (config) => {
       // Đưa Token vào header Authorization
-      const token = storage.session.get<string>('access_token');
+      const token = storage.local.get<string>('access_token');
       if (token) {
         if (config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -43,8 +43,8 @@ export function setupInterceptors(client: ReturnType<typeof axios.create>) {
     (error) => {
       // 401 hết hạn hoặc chưa đăng nhập => Xóa session và văng ra màn Login
       if (error.response?.status === 401) {
-        storage.session.remove('access_token');
-        storage.session.remove('token_type');
+        storage.local.remove('access_token');
+        storage.local.remove('token_type');
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }

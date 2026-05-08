@@ -13,10 +13,7 @@ import { Suspense } from 'react';
  */
 export default function EmployeeConfirmPage() {
   useAuth();
-
   return (
-    <Suspense fallback={<div className="p-4 text-center">Đang tải dữ liệu xác nhận...</div>}>
-      <EmployeeConfirmForm />
-    </Suspense>
+    <EmployeeConfirmForm />
   );
 }

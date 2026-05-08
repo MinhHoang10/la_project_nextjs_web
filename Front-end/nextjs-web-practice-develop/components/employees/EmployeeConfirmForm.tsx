@@ -5,49 +5,24 @@
 'use client';
 
 import { useADM005 } from '@/hooks/useADM005';
-import { useEffect, useState } from 'react';
 import { getEmployeeLabel } from '@/lib/validation/employee';
-import { departmentApi } from '@/lib/api/department.api';
-import { certificationApi } from '@/lib/api/certification.api';
-import { DepartmentDTO } from '@/types/department';
-import { CertificationDTO } from '@/types/certification';
 
+/**
+ * Component hiển thị màn hình xác nhận thông tin nhân viên (ADM005).
+ * Dữ liệu được lấy từ session thông qua hook useADM005.
+ */
 export default function EmployeeConfirmForm() {
-  // lấy dữ liệu trong session
-  const { getEmployeeFromSession, handleBack, handleOK } = useADM005();
-  
-  // state để lưu dữ liệu
-  const [data, setData] = useState<any>(null);
-  const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
-  const [certifications, setCertifications] = useState<CertificationDTO[]>([]);
+  const { loadingInitial, employeeData, departments, certifications, handleBack, handleOK } = useADM005();
 
-  // call API get dữ liệu trong session và master data
-  useEffect(() => {
-    const sessionData = getEmployeeFromSession();
-    setData(sessionData);
-
-    const loadMasterData = async () => {
-      try {
-        const [deptData, certData] = await Promise.all([
-          departmentApi.getAllDepartments(),
-          certificationApi.getAllCertifications()
-        ]);
-        setDepartments(deptData);
-        setCertifications(certData);
-      } catch (error) {
-        // Có thể navigate sang trang lỗi tùy ý
-      }
-    };
-
-    loadMasterData();
-  }, []);
-
-  if (!data) {
-    return <div className="text-center p-4">Không tìm thấy dữ liệu xác nhận.</div>;
+  if (loadingInitial || !employeeData) {
+    return null;
   }
 
-  const departmentName = departments.find(d => d.departmentId === Number(data.departmentId))?.departmentName || '';
-  const certificationName = certifications.find(c => c.certificationId === Number(data.certificationId))?.certificationName || '';
+  // Tra cứu tên phòng ban từ master data
+  const departmentName = departments.find(d => d.departmentId === Number(employeeData.departmentId))?.departmentName || '';
+
+  // Tra cứu tên chứng chỉ từ master data
+  const certificationName = certifications.find(c => c.certificationId === Number(employeeData.certificationId))?.certificationName || '';
 
   return (
     <div className="row">
@@ -57,57 +32,70 @@ export default function EmployeeConfirmForm() {
             <p>情報確認</p>
             <p>入力された情報をＯＫボタンクリックでＤＢへ保存してください</p>
           </li>
+
+          {/* ── アカウント名 ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('employeeLoginId')}</label>
-            <div className="col-sm col-sm-10">{data.employeeLoginId}</div>
+            <div className="col-sm col-sm-10 text-truncate-custom" title={employeeData.employeeLoginId}>{employeeData.employeeLoginId}</div>
           </li>
+
+          {/* ── グループ ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('departmentId')}</label>
-            <div className="col-sm col-sm-10">{departmentName}</div>
+            <div className="col-sm col-sm-10 text-truncate-custom" title={departmentName}>{departmentName}</div>
           </li>
+
+          {/* ── 氏名 ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('employeeName')}</label>
-            <div className="col-sm col-sm-10">{data.employeeName}</div>
+            <div className="col-sm col-sm-10 text-truncate-custom" title={employeeData.employeeName}>{employeeData.employeeName}</div>
           </li>
+
+          {/* ── カタカナ氏名 ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('employeeNameKana')}</label>
-            <div className="col-sm col-sm-10">{data.employeeNameKana}</div>
+            <div className="col-sm col-sm-10 text-truncate-custom" title={employeeData.employeeNameKana}>{employeeData.employeeNameKana}</div>
           </li>
+
+          {/* ── 生年月日 ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('employeeBirthDate')}</label>
-            <div className="col-sm col-sm-10">{data.employeeBirthDate}</div>
+            <div className="col-sm col-sm-10">{employeeData.employeeBirthDate}</div>
           </li>
+
+          {/* ── メールアドレス ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('employeeEmail')}</label>
-            <div className="col-sm col-sm-10">{data.employeeEmail}</div>
+            <div className="col-sm col-sm-10 text-truncate-custom" title={employeeData.employeeEmail}>{employeeData.employeeEmail}</div>
           </li>
+
+          {/* ── 電話番号 ── */}
           <li className="form-group row d-flex bor-none">
             <label className="col-form-label col-sm-2">{getEmployeeLabel('employeeTelephone')}</label>
-            <div className="col-sm col-sm-10">{data.employeeTelephone}</div>
+            <div className="col-sm col-sm-10">{employeeData.employeeTelephone}</div>
           </li>
 
-          {data.certificationId && (
-            <>
-              <li className="title mt-12"><a href="#!">{getEmployeeLabel('certificationName')}</a></li>
-              <li className="form-group row d-flex">
-                <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationId')}</label>
-                <div className="col-sm col-sm-10">{certificationName}</div>
-              </li>
-              <li className="form-group row d-flex">
-                <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationStartDate')}</label>
-                <div className="col-sm col-sm-10">{data.certificationStartDate}</div>
-              </li>
-              <li className="form-group row d-flex">
-                <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationEndDate')}</label>
-                <div className="col-sm col-sm-10">{data.certificationEndDate}</div>
-              </li>
-              <li className="form-group row d-flex">
-                <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationScore')}</label>
-                <div className="col-sm col-sm-10">{data.certificationScore}</div>
-              </li>
-            </>
-          )}
+          {/* ── 日本語能力 — luôn hiển thị, blank nếu không có chứng chỉ ── */}
+          <li className="title mt-12"><a href="#!">{getEmployeeLabel('certificationName')}</a></li>
 
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationId')}</label>
+            <div className="col-sm col-sm-10 text-truncate-custom" title={certificationName}>{certificationName}</div>
+          </li>
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationStartDate')}</label>
+            <div className="col-sm col-sm-10">{employeeData.certificationStartDate}</div>
+          </li>
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationEndDate')}</label>
+            <div className="col-sm col-sm-10">{employeeData.certificationEndDate}</div>
+          </li>
+          <li className="form-group row d-flex">
+            <label className="col-form-label col-sm-2">{getEmployeeLabel('certificationScore')}</label>
+            <div className="col-sm col-sm-10">{employeeData.certificationScore}</div>
+          </li>
+
+          {/* ── Nút hành động ── */}
           <li className="form-group row d-flex">
             <div className="btn-group col-sm col-sm-10 ml">
               <button type="button" onClick={handleOK} className="btn btn-primary btn-sm">OK</button>

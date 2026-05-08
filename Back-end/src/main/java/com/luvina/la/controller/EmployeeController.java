@@ -17,6 +17,7 @@ import com.luvina.la.repository.CertificationRepository;
 import com.luvina.la.repository.DepartmentRepository;
 import com.luvina.la.repository.EmployeeRepository;
 import com.luvina.la.service.EmployeeService;
+import com.luvina.la.util.ValidationUtils;
 import com.luvina.la.validate.EmployeeValidate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -30,7 +31,8 @@ import java.util.List;
 
 /**
  * Controller xử lý các yêu cầu HTTP liên quan đến nghiệp vụ Nhân viên.
- * 
+ * Cung cấp các endpoint REST cho các màn hình ADM002, ADM003, ADM004, ADM005.
+ *
  * @author Nguyen Huy Hoang
  */
 @RestController
@@ -45,7 +47,15 @@ public class EmployeeController {
     private final CertificationRepository certificationRepository;
     private final EmployeeRepository employeeRepository;
 
-    // ===== Constructor =====
+    /**
+     * Khởi tạo Controller với các thành phần phụ thuộc cần thiết.
+     *
+     * @param employeeService         Dịch vụ xử lý nghiệp vụ nhân viên
+     * @param messageSource           Nguồn thông báo đa ngôn ngữ
+     * @param departmentRepository    Repository truy vấn phòng ban
+     * @param certificationRepository Repository truy vấn chứng chỉ
+     * @param employeeRepository      Repository truy vấn nhân viên
+     */
     public EmployeeController(
             EmployeeService employeeService,
             MessageSource messageSource,
@@ -60,11 +70,20 @@ public class EmployeeController {
     }
 
     /**
-     * API lấy danh sách nhân viên (ADM002).
+     * Lấy danh sách nhân viên có hỗ trợ tìm kiếm, lọc và sắp xếp (ADM002).
+     *
+     * @param employeeName          Tên nhân viên cần tìm kiếm (tìm kiếm tương đối)
+     * @param departmentId          Mã phòng ban cần lọc
+     * @param sortEmployeeName      Hướng sắp xếp theo tên nhân viên (asc/desc)
+     * @param sortCertificationName Hướng sắp xếp theo tên chứng chỉ (asc/desc)
+     * @param sortEndDate           Hướng sắp xếp theo ngày hết hạn (asc/desc)
+     * @param limit                 Số lượng bản ghi tối đa trên một trang
+     * @param offset                Vị trí bắt đầu lấy dữ liệu (phân trang)
+     * @return {@link EmployeeListResponse} chứa danh sách nhân viên và tổng số bản
+     *         ghi
      */
     @GetMapping("/employees")
     public ResponseEntity<EmployeeListResponse> getEmployeeList(
-            // ===== Request Parameters =====
             @RequestParam(value = "employeeName", required = false, defaultValue = "") String employeeName,
             @RequestParam(value = "departmentId", required = false) Long departmentId,
             @RequestParam(value = "sortEmployeeName", required = false, defaultValue = AppConstants.SORT_ASC) String sortEmployeeName,
@@ -74,9 +93,9 @@ public class EmployeeController {
             @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset) {
 
         // Validation sort
-        if (!EmployeeValidate.isValidSort(sortEmployeeName) ||
-                !EmployeeValidate.isValidSort(sortCertificationName) ||
-                !EmployeeValidate.isValidSort(sortEndDate)) {
+        if (!ValidationUtils.isValidSort(sortEmployeeName) ||
+                !ValidationUtils.isValidSort(sortCertificationName) ||
+                !ValidationUtils.isValidSort(sortEndDate)) {
             return ResponseEntity.ok(EmployeeListResponse.error(AppConstants.ER021,
                     messageSource.getMessage(AppConstants.ER021, null, LocaleContextHolder.getLocale())));
         }
@@ -114,32 +133,47 @@ public class EmployeeController {
     }
 
     /**
-     * API lấy chi tiết nhân viên.
+     * Lấy thông tin chi tiết của một nhân viên theo ID (ADM003).
+     *
+     * @param id Mã định danh của nhân viên cần xem chi tiết
+     * @return {@link EmployeeResponse} chứa dữ liệu chi tiết nhân viên,
+     *         hoặc lỗi ER013 nếu không tìm thấy
      */
-    @GetMapping("/employee/{id}")
-    public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable Long id) {
+    @GetMapping({"/employee/{id}", "/employee"})
+    public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable(required = false) Long id) {
+        // 1.1 Validate parameter [employeeId] - Trường hợp thiếu tham số (Mã ER001)
+        if (id == null) {
+            MessageResponse messageResponse = new MessageResponse(AppConstants.ER001, java.util.Arrays.asList(" I D "));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
+        }
+
         EmployeeDetailResponse employee = employeeService.getEmployeeDetailById(id);
 
-        // Response lỗi nếu không tìm thấy (Mã ER013)
+        // 1.1 Validate parameter [employeeId] - Trường hợp không tồn tại trong DB (Mã ER013)
         if (employee == null) {
             MessageResponse messageResponse = new MessageResponse(AppConstants.ER013, java.util.Arrays.asList(" I D "));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
         }
 
-        // Chuyển đổi EmployeeDetailResponse sang EmployeeResponse để thống nhất kiểu trả về
         return ResponseEntity.ok(EmployeeResponse.detail(AppConstants.SUCCESS_CODE, employee));
     }
 
     /**
-     * API thêm mới nhân viên (ADM005 OK).
+     * Thêm mới một nhân viên vào hệ thống (ADM004 - ADM005).
+     *
+     * @param request Dữ liệu nhân viên từ client
+     * @return {@link EmployeeResponse} chứa ID nhân viên vừa tạo và thông báo
+     *         MSG001,
+     *         hoặc lỗi hệ thống ER015 nếu có exception xảy ra
      */
     @PostMapping("/employee")
-    public ResponseEntity<EmployeeResponse> createEmployee(@RequestBody EmployeeRequest request) {
+    public ResponseEntity<EmployeeResponse> createEmployee(@RequestBody EmployeeRequest employeeRequest) {
         try {
             // Validation Request
             List<MessageResponse> errors = EmployeeValidate.validateEmployeeForm(
-                    request, true, departmentRepository, certificationRepository, employeeRepository);
+                    employeeRequest, true, departmentRepository, certificationRepository, employeeRepository);
 
             // Response lỗi nếu validation thất bại
             if (!errors.isEmpty()) {
@@ -148,30 +182,40 @@ public class EmployeeController {
             }
 
             // Tạo nhân viên
-            Long employeeId = employeeService.addEmployee(request);
+            Long employeeId = employeeService.addEmployee(employeeRequest);
 
             // Response thành công
-            MessageResponse msg = new MessageResponse(AppConstants.MSG001, new ArrayList<>());
+            MessageResponse messageResponse = new MessageResponse(AppConstants.MSG001, new ArrayList<>());
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(EmployeeResponse.success(AppConstants.SUCCESS_CODE, employeeId, msg));
-        } catch (Exception e) {
-            log.error("Error creating employee", e);
-            // Response lỗi hệ thống (ER015)
-            MessageResponse msg = new MessageResponse(AppConstants.ER015, new ArrayList<>());
+                    .body(EmployeeResponse.success(AppConstants.SUCCESS_CODE, employeeId, messageResponse));
+        } catch (LogicException e) {
+            MessageResponse messageResponse = new MessageResponse(e.getErrorCode(), e.getParams());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
+        } catch (Exception e) {
+            // Response lỗi hệ thống (ER015)
+            MessageResponse messageResponse = new MessageResponse(AppConstants.ER015, new ArrayList<>());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
         }
     }
 
     /**
-     * API cập nhật thông tin nhân viên (ADM005 Edit OK).
+     * Cập nhật thông tin của một nhân viên hiện có (ADM004 Edit - ADM005).
+     *
+     * @param request Dữ liệu nhân viên cần cập nhật từ client,
+     *                bắt buộc phải có {@code employeeId}
+     * @return {@link EmployeeResponse} chứa ID nhân viên và thông báo MSG002 nếu
+     *         thành công,
+     *         lỗi nghiệp vụ nếu có {@link LogicException},
+     *         hoặc lỗi hệ thống ER015 nếu có exception không xác định
      */
     @PutMapping("/employee")
-    public ResponseEntity<EmployeeResponse> updateEmployee(@RequestBody EmployeeRequest request) {
+    public ResponseEntity<EmployeeResponse> updateEmployee(@RequestBody EmployeeRequest employeeRequest) {
         try {
             // Validation Request
             List<MessageResponse> errors = EmployeeValidate.validateEmployeeForm(
-                    request, false, departmentRepository, certificationRepository, employeeRepository);
+                    employeeRequest, false, departmentRepository, certificationRepository, employeeRepository);
 
             // Response lỗi nếu validation thất bại
             if (!errors.isEmpty()) {
@@ -180,34 +224,43 @@ public class EmployeeController {
             }
 
             // Gọi service update
-            employeeService.editEmployee(request);
+            employeeService.editEmployee(employeeRequest);
 
             // Response thành công
-            MessageResponse msg = new MessageResponse(AppConstants.MSG002, new ArrayList<>());
-            return ResponseEntity.ok(EmployeeResponse.success(AppConstants.SUCCESS_CODE, request.getEmployeeId(), msg));
+            MessageResponse messageResponse = new MessageResponse(AppConstants.MSG002, new ArrayList<>());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(EmployeeResponse.success(AppConstants.SUCCESS_CODE, employeeRequest.getEmployeeId(),
+                            messageResponse));
         } catch (LogicException e) {
-            MessageResponse msg = new MessageResponse(e.getErrorCode(), e.getParams());
+            MessageResponse messageResponse = new MessageResponse(e.getErrorCode(), e.getParams());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
         } catch (Exception e) {
-            log.error("Error updating employee", e);
             // Response lỗi hệ thống (ER015)
-            MessageResponse msg = new MessageResponse(AppConstants.ER015, new ArrayList<>());
+            MessageResponse messageResponse = new MessageResponse(AppConstants.ER015, new ArrayList<>());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
         }
     }
 
     /**
-     * API kiểm tra tính hợp lệ (ADM004 Xác nhận).
+     * Kiểm tra tính hợp lệ của dữ liệu nhân viên mà không lưu vào cơ sở dữ liệu
+     * (ADM004 Xác nhận).
+     * Dùng để validate trước khi hiển thị màn hình xác nhận (ADM005).
+     *
+     * @param request Dữ liệu nhân viên cần kiểm tra từ client
+     * @return {@link EmployeeResponse} với code thành công nếu hợp lệ,
+     *         danh sách lỗi validation nếu dữ liệu không hợp lệ,
+     *         hoặc lỗi hệ thống ER015 nếu có exception xảy ra
      */
     @PostMapping("/employee/validate")
-    public ResponseEntity<EmployeeResponse> validateEmployee(@RequestBody EmployeeRequest request) {
-        boolean isAddMode = request.getEmployeeId() == null;
+    public ResponseEntity<EmployeeResponse> validateEmployee(@RequestBody EmployeeRequest employeeRequest) {
+        boolean isAddMode = employeeRequest.getEmployeeId() == null;
         try {
-            // Validation Request
-            List<MessageResponse> errors = EmployeeValidate.validateEmployeeForm(
-                    request, isAddMode, departmentRepository, certificationRepository, employeeRepository);
+            // Gọi hàm validate riêng cho API xác nhận (không kiểm tra password và
+            // employeeId tồn tại)
+            List<MessageResponse> errors = EmployeeValidate.validateEmployeeFormForConfirm(
+                    employeeRequest, isAddMode, departmentRepository, certificationRepository, employeeRepository);
 
             // Response lỗi nếu validation thất bại
             if (!errors.isEmpty()) {
@@ -217,37 +270,50 @@ public class EmployeeController {
 
             return ResponseEntity.ok(EmployeeResponse.success(AppConstants.SUCCESS_CODE, null, null));
         } catch (LogicException e) {
-            MessageResponse msg = new MessageResponse(e.getErrorCode(), e.getParams());
+            MessageResponse messageResponse = new MessageResponse(e.getErrorCode(), e.getParams());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
         } catch (Exception e) {
-            log.error("Error validating employee", e);
-            MessageResponse msg = new MessageResponse(AppConstants.ER015, new ArrayList<>());
+            MessageResponse messageResponse = new MessageResponse(AppConstants.ER015, new ArrayList<>());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, msg));
+                    .body(EmployeeResponse.error(AppConstants.SYSTEM_ERROR_CODE, messageResponse));
         }
     }
 
     /**
-     * Delete API: ADM003 (Xóa Nhân Viên)
-     * 
-     * @param id ID của nhân viên cần xóa
-     * @return EmployeeDeleteResponse báo thành công hoặc thất bại
+     * Xóa một nhân viên khỏi hệ thống theo ID (ADM003).
+     * Thao tác xóa sẽ đồng thời xóa toàn bộ chứng chỉ liên quan.
+     *
+     * @param id Mã định danh của nhân viên cần xóa
+     * @return {@link EmployeeDeleteResponse} chứa thông báo MSG003 nếu xóa thành
+     *         công,
+     *         lỗi nghiệp vụ nếu có {@link LogicException} (ví dụ: nhân viên không
+     *         tồn tại),
+     *         hoặc lỗi hệ thống ER015 nếu có exception không xác định
      */
-    @DeleteMapping("/employee/{id}")
-    public ResponseEntity<EmployeeDeleteResponse> deleteEmployee(@PathVariable Long id) {
-        // ===== Logic Exception =====
+    @DeleteMapping({"/employee/{id}", "/employee"})
+    public ResponseEntity<EmployeeDeleteResponse> deleteEmployee(@PathVariable(required = false) Long id) {
+        // 1.1 Validate parameter [employeeId] - Trường hợp thiếu tham số (Mã ER001)
+        if (id == null) {
+            MessageResponse messageResponse = new MessageResponse(AppConstants.ER001, java.util.Arrays.asList(" I D "));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(EmployeeDeleteResponse.error(null, messageResponse));
+        }
+
         try {
+            // Gọi service delete
             employeeService.deleteEmployee(id);
+
+            // Response thành công
             return ResponseEntity.ok(EmployeeDeleteResponse.success(id, AppConstants.MSG003));
         } catch (LogicException e) {
-            MessageResponse msg = new MessageResponse(e.getErrorCode(), e.getParams());
+            MessageResponse messageResponse = new MessageResponse(e.getErrorCode(), e.getParams());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeDeleteResponse.error(id, msg));
+                    .body(EmployeeDeleteResponse.error(id, messageResponse));
         } catch (Exception e) {
-            MessageResponse msg = new MessageResponse(AppConstants.ER015, new ArrayList<>());
+            MessageResponse messageResponse = new MessageResponse(AppConstants.ER015, new ArrayList<>());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EmployeeDeleteResponse.error(id, msg));
+                    .body(EmployeeDeleteResponse.error(id, messageResponse));
         }
     }
 }

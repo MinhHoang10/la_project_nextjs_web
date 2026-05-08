@@ -39,6 +39,8 @@ public class AppConstants {
     public static final String MSG001 = "MSG001"; // Thêm mới thành công
     public static final String MSG002 = "MSG002"; // Cập nhật thành công
     public static final String MSG003 = "MSG003"; // Xóa thành công
+    public static final String MSG004 = "MSG004"; // Xác nhận trước khi xóa
+    public static final String MSG005 = "MSG005"; // Không tìm thấy user
 
     // ===== Mã lỗi nghiệp vụ cho chức năng Đăng nhập (Login) =====
     public static final String LOGIN_FAILED_CODE = "401"; // Sai User/Pass

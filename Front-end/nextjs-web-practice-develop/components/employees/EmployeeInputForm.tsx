@@ -6,7 +6,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { useADM004 } from '@/hooks/useADM004';
 import { resolveErrorMessage } from '@/lib/validation/employee';
 import { EmployeeFormDTO } from '@/types/employee';
@@ -40,7 +40,6 @@ function FieldError({
 // Form chính
 // ──────────────────────────────────────────────
 export default function EmployeeInputForm() {
-  const router = useRouter();
   const {
     departments,
     certifications,
@@ -49,12 +48,18 @@ export default function EmployeeInputForm() {
     formData,
     errors,
     updateAndValidateField,
+    validateFieldOnBlur,
     handleConfirm,
+    handleBack,
+    handleCertificationChange,
   } = useADM004();
 
   const birthDateRef = useRef<DatePicker>(null);
   const certificationStartDateRef = useRef<DatePicker>(null);
   const certificationEndDateRef = useRef<DatePicker>(null);
+
+  // Kiểm tra xem có phải chế độ EDIT (hoặc BACK sau khi đã có dữ liệu Employee) không
+  const isEditMode = mode === APP_MODES.EDIT || (mode === APP_MODES.BACK && !!formData.employeeId);
 
   // Đồng bộ date strings và Date objects cho react-datepicker
   const getDateObj = (dateStr?: string) => {
@@ -64,14 +69,6 @@ export default function EmployeeInputForm() {
   };
   const getDateStr = (date: Date | null) =>
     date ? format(date, 'yyyy/MM/dd') : '';
-
-  const handleBack = () => {
-    if (formData.employeeId) {
-      router.push(`/employees/adm003/${formData.employeeId}`);
-    } else {
-      router.push('/employees/adm002');
-    }
-  };
 
   // Xác định xem đã chọn chứng chỉ hay chưa
   const hasCertification = !!formData.certificationId;
@@ -98,7 +95,9 @@ export default function EmployeeInputForm() {
                 id="employeeLoginId"
                 className={`form-control${errors.employeeLoginId ? ' is-invalid' : ''}`}
                 value={formData.employeeLoginId || ''}
+                disabled={isEditMode}
                 onChange={(e) => updateAndValidateField('employeeLoginId', e.target.value)}
+                onBlur={() => validateFieldOnBlur('employeeLoginId')}
               />
               <FieldError errorCode={errors.employeeLoginId} fieldKey="employeeLoginId" />
             </div>
@@ -117,6 +116,7 @@ export default function EmployeeInputForm() {
                 onChange={(e) =>
                   updateAndValidateField('departmentId', Number(e.target.value))
                 }
+                onBlur={() => validateFieldOnBlur('departmentId')}
               >
                 <option value="">選択してください</option>
                 {departments.map((dept) => (
@@ -141,6 +141,7 @@ export default function EmployeeInputForm() {
                 className={`form-control${errors.employeeName ? ' is-invalid' : ''}`}
                 value={formData.employeeName || ''}
                 onChange={(e) => updateAndValidateField('employeeName', e.target.value)}
+                onBlur={() => validateFieldOnBlur('employeeName')}
               />
               <FieldError errorCode={errors.employeeName} fieldKey="employeeName" />
             </div>
@@ -160,6 +161,7 @@ export default function EmployeeInputForm() {
                 onChange={(e) =>
                   updateAndValidateField('employeeNameKana', e.target.value)
                 }
+                onBlur={() => validateFieldOnBlur('employeeNameKana')}
               />
               <FieldError errorCode={errors.employeeNameKana} fieldKey="employeeNameKana" />
             </div>
@@ -170,27 +172,27 @@ export default function EmployeeInputForm() {
             <label className="col-form-label col-sm-2">
               <i className="relative">{getEmployeeLabel('employeeBirthDate')}:<span className="note-red">*</span></i>
             </label>
-            <div className="col-sm col-sm-10 d-flex">
-              <div className="datepicker-wrapper">
-                <DatePicker
-                  ref={birthDateRef}
-                  placeholderText="yyyy/MM/dd"
-                  selected={getDateObj(formData.employeeBirthDate)}
-                  onChange={(date: Date | null, e: React.SyntheticEvent<any> | undefined) => {
-                    if (e && e.type === 'change') return;
-                    updateAndValidateField('employeeBirthDate', getDateStr(date));
-                  }}
-                  onChangeRaw={(e: any) => {
-                    if (e && e.target !== undefined) {
-                      updateAndValidateField('employeeBirthDate', e.target.value);
-                    }
-                  }}
-                  dateFormat="yyyy/MM/dd"
-                />
-                <span
-                  className="glyphicon glyphicon-calendar"
-                  onClick={() => birthDateRef.current?.setFocus()}
-                />
+            <div className="col-sm col-sm-10">
+              <div className="d-flex">
+                <div className="datepicker-wrapper">
+                  <DatePicker
+                    ref={birthDateRef}
+                    // readOnly
+                    placeholderText="yyyy/MM/dd"
+                    selected={getDateObj(formData.employeeBirthDate)}
+                    onChange={(date: Date | null) => {
+                      updateAndValidateField('employeeBirthDate', getDateStr(date));
+                    }}
+                    dateFormat="yyyy/MM/dd"
+                    onKeyDown={(e) => e.preventDefault()}
+                    onBlur={() => validateFieldOnBlur('employeeBirthDate')}
+                    className={`form-control${errors.employeeBirthDate ? ' is-invalid' : ''}`}
+                  />
+                  <span
+                    className="glyphicon glyphicon-calendar"
+                    onClick={() => birthDateRef.current?.setFocus()}
+                  />
+                </div>
               </div>
               <FieldError errorCode={errors.employeeBirthDate} fieldKey="employeeBirthDate" />
             </div>
@@ -208,6 +210,7 @@ export default function EmployeeInputForm() {
                 className={`form-control${errors.employeeEmail ? ' is-invalid' : ''}`}
                 value={formData.employeeEmail || ''}
                 onChange={(e) => updateAndValidateField('employeeEmail', e.target.value)}
+                onBlur={() => validateFieldOnBlur('employeeEmail')}
               />
               <FieldError errorCode={errors.employeeEmail} fieldKey="employeeEmail" />
             </div>
@@ -227,53 +230,60 @@ export default function EmployeeInputForm() {
                 onChange={(e) =>
                   updateAndValidateField('employeeTelephone', e.target.value)
                 }
+                onBlur={() => validateFieldOnBlur('employeeTelephone')}
               />
               <FieldError errorCode={errors.employeeTelephone} fieldKey="employeeTelephone" />
             </div>
           </li>
 
-          {/* ── パスワード (LoginPassword) — ER001, ER007 ── */}
-          <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">
-              <i className="relative">{getEmployeeLabel('employeeLoginPassword')}:<span className="note-red">*</span></i>
-            </label>
-            <div className="col-sm col-sm-10">
-              <input
-                type="password"
-                id="employeeLoginPassword"
-                placeholder="●●●●●●●●●●"
-                className={`form-control${errors.employeeLoginPassword ? ' is-invalid' : ''}`}
-                value={formData.employeeLoginPassword || ''}
-                onChange={(e) =>
-                  updateAndValidateField('employeeLoginPassword', e.target.value)
-                }
-              />
-              <FieldError errorCode={errors.employeeLoginPassword} fieldKey="employeeLoginPassword" />
-            </div>
-          </li>
+          {/* ── パスワード (LoginPassword) — chỉ hiển thị khi thêm mới ── */}
+          {!isEditMode && (
+            <li className="form-group row d-flex">
+              <label className="col-form-label col-sm-2">
+                <i className="relative">{getEmployeeLabel('employeeLoginPassword')}:<span className="note-red">*</span></i>
+              </label>
+              <div className="col-sm col-sm-10">
+                <input
+                  type="password"
+                  id="employeeLoginPassword"
+                  // placeholder="●●●●●●●●●●"
+                  className={`form-control${errors.employeeLoginPassword ? ' is-invalid' : ''}`}
+                  value={formData.employeeLoginPassword || ''}
+                  onChange={(e) =>
+                    updateAndValidateField('employeeLoginPassword', e.target.value)
+                  }
+                  onBlur={() => validateFieldOnBlur('employeeLoginPassword')}
+                />
+                <FieldError errorCode={errors.employeeLoginPassword} fieldKey="employeeLoginPassword" />
+              </div>
+            </li>
+          )}
 
-          {/* ── パスワード（確認）(ConfirmPassword) — ER001, ER017 ── */}
-          <li className="form-group row d-flex">
-            <label className="col-form-label col-sm-2">
-              <i className="relative">{getEmployeeLabel('employeeLoginPasswordConfirm')}:</i>
-            </label>
-            <div className="col-sm col-sm-10">
-              <input
-                type="password"
-                id="employeeLoginPasswordConfirm"
-                placeholder="●●●●●●●●●●"
-                className={`form-control${errors.employeeLoginPasswordConfirm ? ' is-invalid' : ''}`}
-                value={formData.employeeLoginPasswordConfirm || ''}
-                onChange={(e) =>
-                  updateAndValidateField('employeeLoginPasswordConfirm', e.target.value)
-                }
-              />
-              <FieldError
-                errorCode={errors.employeeLoginPasswordConfirm}
-                fieldKey="employeeLoginPasswordConfirm"
-              />
-            </div>
-          </li>
+          {/* ── パスワード（確認） (ConfirmPassword) — chỉ hiển thị khi thêm mới ── */}
+          {!isEditMode && (
+            <li className="form-group row d-flex">
+              <label className="col-form-label col-sm-2">
+                <i className="relative">{getEmployeeLabel('employeeLoginPasswordConfirm')}:</i>
+              </label>
+              <div className="col-sm col-sm-10">
+                <input
+                  type="password"
+                  id="employeeLoginPasswordConfirm"
+                  // placeholder="●●●●●●●●●●"
+                  className={`form-control${errors.employeeLoginPasswordConfirm ? ' is-invalid' : ''}`}
+                  value={formData.employeeLoginPasswordConfirm || ''}
+                  onChange={(e) =>
+                    updateAndValidateField('employeeLoginPasswordConfirm', e.target.value)
+                  }
+                  onBlur={() => validateFieldOnBlur('employeeLoginPasswordConfirm')}
+                />
+                <FieldError
+                  errorCode={errors.employeeLoginPasswordConfirm}
+                  fieldKey="employeeLoginPasswordConfirm"
+                />
+              </div>
+            </li>
+          )}
 
           {/* ── 日本語能力 section ── */}
           <li className="title mt-12">
@@ -292,14 +302,10 @@ export default function EmployeeInputForm() {
                 value={formData.certificationId || ''}
                 onChange={(e) => {
                   const val = e.target.value ? Number(e.target.value) : undefined;
-                  updateAndValidateField('certificationId', val);
-                  // Clear sub-field errors when certification changes
-                  if (!val) {
-                    updateAndValidateField('certificationStartDate', '');
-                    updateAndValidateField('certificationEndDate', '');
-                    updateAndValidateField('certificationScore', undefined);
-                  }
+                  // Dùng handleCertificationChange để đồng thời reset certificationId và 3 trường con
+                  handleCertificationChange(val);
                 }}
+                onBlur={() => validateFieldOnBlur('certificationId')}
               >
                 <option value="">選択してください</option>
                 {certifications.map((cert) => (
@@ -312,35 +318,32 @@ export default function EmployeeInputForm() {
             </div>
           </li>
 
-          {/* ── 資格交付日 (startDate) — always visible, disabled when no cert ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">
               <i className="relative">{getEmployeeLabel('certificationStartDate')}:{hasCertification && <span className="note-red">*</span>}</i>
             </label>
-            <div className="col-sm col-sm-10 d-flex">
-              <div className="datepicker-wrapper">
-                <DatePicker
-                  ref={certificationStartDateRef}
-                  placeholderText="yyyy/MM/dd"
-                  selected={getDateObj(formData.certificationStartDate)}
-                  onChange={(date: Date | null, e: React.SyntheticEvent<any> | undefined) => {
-                    if (e && e.type === 'change') return;
-                    updateAndValidateField('certificationStartDate', getDateStr(date));
-                  }}
-                  onChangeRaw={(e: any) => {
-                    if (e && e.target !== undefined) {
-                      updateAndValidateField('certificationStartDate', e.target.value);
-                    }
-                  }}
-                  dateFormat="yyyy/MM/dd"
-                  disabled={!hasCertification}
-                />
-                <span
-                  className="glyphicon glyphicon-calendar"
-                  onClick={() => {
-                    if (hasCertification) certificationStartDateRef.current?.setFocus();
-                  }}
-                />
+            <div className="col-sm col-sm-10">
+              <div className="d-flex">
+                <div className="datepicker-wrapper">
+                  <DatePicker
+                    ref={certificationStartDateRef}
+                    placeholderText="yyyy/MM/dd"
+                    selected={getDateObj(formData.certificationStartDate)}
+                    onChange={(date: Date | null) => {
+                      updateAndValidateField('certificationStartDate', getDateStr(date));
+                    }}
+                    dateFormat="yyyy/MM/dd"
+                    disabled={!hasCertification}
+                    onBlur={() => validateFieldOnBlur('certificationStartDate')}
+                    className={`form-control${errors.certificationStartDate ? ' is-invalid' : ''}`}
+                  />
+                  <span
+                    className="glyphicon glyphicon-calendar"
+                    onClick={() => {
+                      if (hasCertification) certificationStartDateRef.current?.setFocus();
+                    }}
+                  />
+                </div>
               </div>
               <FieldError
                 errorCode={errors.certificationStartDate}
@@ -349,35 +352,33 @@ export default function EmployeeInputForm() {
             </div>
           </li>
 
-          {/* ── 失効日 (endDate) — always visible, disabled when no cert ── */}
+          {/* ── 失効日 (endDate) ── */}
           <li className="form-group row d-flex">
             <label className="col-form-label col-sm-2">
               <i className="relative">{getEmployeeLabel('certificationEndDate')}:{hasCertification && <span className="note-red">*</span>}</i>
             </label>
-            <div className="col-sm col-sm-10 d-flex">
-              <div className="datepicker-wrapper">
-                <DatePicker
-                  ref={certificationEndDateRef}
-                  placeholderText="yyyy/MM/dd"
-                  selected={getDateObj(formData.certificationEndDate)}
-                  onChange={(date: Date | null, e: React.SyntheticEvent<any> | undefined) => {
-                    if (e && e.type === 'change') return;
-                    updateAndValidateField('certificationEndDate', getDateStr(date));
-                  }}
-                  onChangeRaw={(e: any) => {
-                    if (e && e.target !== undefined) {
-                      updateAndValidateField('certificationEndDate', e.target.value);
-                    }
-                  }}
-                  dateFormat="yyyy/MM/dd"
-                  disabled={!hasCertification}
-                />
-                <span
-                  className="glyphicon glyphicon-calendar"
-                  onClick={() => {
-                    if (hasCertification) certificationEndDateRef.current?.setFocus();
-                  }}
-                />
+            <div className="col-sm col-sm-10">
+              <div className="d-flex">
+                <div className="datepicker-wrapper">
+                  <DatePicker
+                    ref={certificationEndDateRef}
+                    placeholderText="yyyy/MM/dd"
+                    selected={getDateObj(formData.certificationEndDate)}
+                    onChange={(date: Date | null) => {
+                      updateAndValidateField('certificationEndDate', getDateStr(date));
+                    }}
+                    dateFormat="yyyy/MM/dd"
+                    disabled={!hasCertification}
+                    onBlur={() => validateFieldOnBlur('certificationEndDate')}
+                    className={`form-control${errors.certificationEndDate ? ' is-invalid' : ''}`}
+                  />
+                  <span
+                    className="glyphicon glyphicon-calendar"
+                    onClick={() => {
+                      if (hasCertification) certificationEndDateRef.current?.setFocus();
+                    }}
+                  />
+                </div>
               </div>
               <FieldError
                 errorCode={errors.certificationEndDate}
@@ -401,6 +402,7 @@ export default function EmployeeInputForm() {
                 onChange={(e) =>
                   updateAndValidateField('certificationScore', e.target.value)
                 }
+                onBlur={() => validateFieldOnBlur('certificationScore')}
               />
               <FieldError
                 errorCode={errors.certificationScore}

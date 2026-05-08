@@ -9,9 +9,9 @@ import { useADM003 } from '@/hooks/useADM003';
 export default function EmployeeDetailForm() {
   const { employee, loading, handleEdit, handleBack, handleDelete } = useADM003();
 
-  if (loading) {
-    return <div className="p-4 text-center font-weight-bold">Đang tải dữ liệu nhân viên...</div>;
-  }
+  // if (loading) {
+  //   return <div className="p-4 text-center font-weight-bold">Đang tải dữ liệu nhân viên...</div>;
+  // }
 
   if (!employee) {
     return <div className="p-4 text-center text-danger">Không tìm thấy thông tin nhân viên hoặc đã bị xóa.</div>;
@@ -25,19 +25,19 @@ export default function EmployeeDetailForm() {
         {/* Thông tin cơ bản */}
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">アカウント名</label>
-          <div className="col-sm col-sm-10">{employee.employeeLoginId}</div>
+          <div className="col-sm col-sm-10 text-truncate-custom" title={employee.employeeLoginId}>{employee.employeeLoginId}</div>
         </li>
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">グループ</label>
-          <div className="col-sm col-sm-10">{employee.departmentName}</div>
+          <div className="col-sm col-sm-10 text-truncate-custom" title={employee.departmentName}>{employee.departmentName}</div>
         </li>
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">氏名</label>
-          <div className="col-sm col-sm-10">{employee.employeeName}</div>
+          <div className="col-sm col-sm-10 text-truncate-custom" title={employee.employeeName}>{employee.employeeName}</div>
         </li>
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">カタカナ氏名</label>
-          <div className="col-sm col-sm-10">{employee.employeeNameKana}</div>
+          <div className="col-sm col-sm-10 text-truncate-custom" title={employee.employeeNameKana}>{employee.employeeNameKana}</div>
         </li>
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">生年月日</label>
@@ -45,7 +45,7 @@ export default function EmployeeDetailForm() {
         </li>
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">メールアドレス</label>
-          <div className="col-sm col-sm-10">{employee.employeeEmail}</div>
+          <div className="col-sm col-sm-10 text-truncate-custom" title={employee.employeeEmail}>{employee.employeeEmail}</div>
         </li>
         <li className="form-group row d-flex bor-none">
           <label className="col-form-label col-sm-2">電話番号</label>
@@ -56,7 +56,7 @@ export default function EmployeeDetailForm() {
         <li className="title mt-12"><a href="#!">日本語能力</a></li>
         <li className="form-group row d-flex">
           <label className="col-form-label col-sm-2">資格</label>
-          <div className="col-sm col-sm-10">
+          <div className="col-sm col-sm-10 text-truncate-custom" title={employee.certifications && employee.certifications.length > 0 ? employee.certifications[0].certificationName : ''}>
             {employee.certifications && employee.certifications.length > 0 ? employee.certifications[0].certificationName : ''}
           </div>
         </li>
