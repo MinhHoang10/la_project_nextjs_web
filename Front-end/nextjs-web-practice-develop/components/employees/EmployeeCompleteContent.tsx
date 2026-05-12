@@ -1,8 +1,13 @@
+/**
+ * Copyright(C) 2026 Luvina Software Company
+ * EmployeeCompleteContent.tsx, 5/3/2026 Nguyen Huy Hoang
+ */
+
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { COMPLETION_MESSAGES, EMPLOYEE_COMPLETE_MESSAGE_MAP } from '@/lib/constants/common';
+import { COMPLETION_MESSAGES, EMPLOYEE_COMPLETE_MESSAGE_MAP, QUERY_PARAMS } from '@/lib/constants/common';
 
 /**
  * Component hiển thị nội dung thông báo hoàn tất (ADM006).
@@ -11,8 +16,10 @@ export default function EmployeeCompleteContent() {
   useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode');
+  // Đọc chế độ từ query param
+  const mode = searchParams.get(QUERY_PARAMS.MODE);
 
+  // Lấy message từ EMPLOYEE_COMPLETE_MESSAGE_MAP hoặc message mặc định nếu không tìm thấy
   const message = (mode && EMPLOYEE_COMPLETE_MESSAGE_MAP[mode]) || COMPLETION_MESSAGES.DEFAULT;
 
   return (
@@ -20,9 +27,9 @@ export default function EmployeeCompleteContent() {
       <div className="notification-box">
         <h1 className="msg-title">{message}</h1>
         <div className="notification-box-btn">
-          <button 
-            type="button" 
-            onClick={() => router.push('/employees/adm002')} 
+          <button
+            type="button"
+            onClick={() => router.push('/employees/adm002')}
             className="btn btn-primary btn-sm"
           >
             OK

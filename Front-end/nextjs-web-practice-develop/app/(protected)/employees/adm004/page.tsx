@@ -14,8 +14,6 @@ import EmployeeInputForm from '@/components/employees/EmployeeInputForm';
 export default function EmployeeEditPage() {
   useAuth();
   return (
-    <Suspense fallback={<div className="p-4 text-center">Đang tải cấu hình...</div>}>
-      <EmployeeInputForm />
-    </Suspense>
+    <EmployeeInputForm />
   );
 }

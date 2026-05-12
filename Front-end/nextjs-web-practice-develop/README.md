@@ -1,27 +1,27 @@
-# Dự án Quản lý Nhân viên - Frontend (Next.js)
+# Employee Management Frontend (Next.js)
 
-Dự án này là bản triển khai Frontend cho hệ thống Quản lý Nhân viên sử dụng Next.js.
+This project is a Next.js implementation of the Employee Management Frontend.
 
-## Khởi động
+## Getting Started
 
-Đầu tiên, chạy server phát triển (development server):
+First, run the development server:
 
 ```bash
 npm run dev
-# hoặc
+# or
 yarn dev
-# hoặc
+# or
 pnpm dev
 ```
 
-Mở [http://localhost:3000](http://localhost:3000) trên trình duyệt để xem kết quả.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Yêu cầu hệ thống
+## Prerequisites
 
 - Node.js 18+
-- Backend API đang chạy tại `http://localhost:8085`
+- Backend API running at `http://localhost:8085`
 
-## Biến môi trường
+## Environment Variables
 
 Tạo file `.env.local` ở thư mục gốc của dự án và thêm nội dung sau:
 

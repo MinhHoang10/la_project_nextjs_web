@@ -17,15 +17,15 @@ import { API_STATUS_CODES } from '@/lib/constants/common';
  * 
  * Các chức năng chính:
  * - Tìm kiếm theo tên và phòng ban.
- * - Sắp xếp đa cột (Multi-sort).
- * - Phân trang (Pagination).
+ * - Sắp xếp đa cột.
+ * - Phân trang.
  * - Duy trì trạng thái tìm kiếm qua Session Storage.
  * 
  * @returns Các biến trạng thái và hàm xử lý cho màn hình ADM002.
  */
 export function useADM002() {
   const router = useRouter();
-  
+
   // Danh sách nhân viên và phòng ban lấy từ API
   const [employees, setEmployees] = useState<EmployeeDTO[]>([]);
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
@@ -33,10 +33,10 @@ export function useADM002() {
   // State quản lý tiêu chí tìm kiếm người dùng nhập vào
   const [searchName, setSearchName] = useState('');
   const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined);
-  
+
   // Trạng thái hiển thị vòng xoay chờ khi gọi API
   const [loading, setLoading] = useState(true);
-  
+
   // Số lượng bản ghi hiển thị trên mỗi trang
   const [pageSize, setPageSize] = useState(20);
 
@@ -103,8 +103,8 @@ export function useADM002() {
     setLoading(true);
     try {
       /**
-       * Ánh xạ (Map) các cột Sort trên giao diện sang các thuộc tính 
-       * (Property path) tương ứng trong Model ở Backend.
+       * Ánh xạ các cột Sort trên giao diện sang các thuộc tính tương ứng 
+       * trong Model ở Backend.
        */
       const sort = [
         `employeeName,${sortConfig.employeeName}`,
